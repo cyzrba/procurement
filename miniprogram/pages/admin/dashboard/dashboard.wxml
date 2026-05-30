@@ -1,0 +1,47 @@
+<view class="page-admin">
+  <!-- 顶栏 -->
+  <view class="admin-header">
+    <view class="admin-header-left">
+      <text class="admin-title">管理后台</text>
+      <text class="admin-role">管理员: {{adminName}}</text>
+    </view>
+    <view class="admin-header-right">
+      <text class="logout-btn" bindtap="handleLogout">退出</text>
+    </view>
+  </view>
+
+  <!-- 快捷入口网格 -->
+  <view class="admin-grid">
+    <view class="grid-card" bindtap="goTo" data-page="category">
+      <view class="grid-icon" style="background:#e0ecec;">📂</view>
+      <text class="grid-name">类目管理</text>
+      <text class="grid-desc">采购类目增删改查</text>
+    </view>
+    <view class="grid-card" bindtap="goTo" data-page="price-range">
+      <view class="grid-icon" style="background:#f5ede0;">💰</view>
+      <text class="grid-name">价格区间</text>
+      <text class="grid-desc">价格区间配置管理</text>
+    </view>
+    <view class="grid-card" bindtap="goTo" data-page="guide">
+      <view class="grid-icon" style="background:#e0ecec;">📄</view>
+      <text class="grid-name">采购指南</text>
+      <text class="grid-desc">指南上传/发布/下架</text>
+    </view>
+    <view class="grid-card" bindtap="goTo" data-page="user">
+      <view class="grid-icon" style="background:#f5ede0;">👥</view>
+      <text class="grid-name">用户管理</text>
+      <text class="grid-desc">批量导入/管理用户</text>
+    </view>
+    <view class="grid-card" bindtap="goTo" data-page="message">
+      <view class="grid-icon" style="background:#e0ecec;">📢</view>
+      <text class="grid-name">消息推送</text>
+      <text class="grid-desc">通知发送与管理</text>
+    </view>
+  </view>
+
+  <!-- 快速帮助 -->
+  <view class="help-card">
+    <text class="help-title">💡 使用提示</text>
+    <text class="help-text">通过上方菜单管理采购数据。添加指南前请先创建类目和价格区间。用户导入支持 Excel 模板。</text>
+  </view>
+</view>

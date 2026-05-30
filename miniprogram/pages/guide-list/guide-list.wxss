@@ -1,0 +1,113 @@
+/* ===== 指南列表 ===== */
+.page-guide-list {
+  min-height: 100vh;
+  background: #f7f3ee;
+  padding-bottom: 40rpx;
+}
+
+.price-banner {
+  background: linear-gradient(135deg, #1a7a7a, #145c5c);
+  padding: 36rpx 40rpx;
+  color: #fff;
+}
+.price-label {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+.price-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  display: block;
+  margin-top: 8rpx;
+}
+.price-range {
+  font-size: 26rpx;
+  opacity: 0.7;
+  margin-top: 6rpx;
+  display: block;
+}
+
+.list-section {
+  padding: 32rpx 32rpx 0;
+}
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.list-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2d2a24;
+}
+.list-count {
+  font-size: 24rpx;
+  color: #8a7e72;
+}
+
+.guide-card {
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+.guide-card:active {
+  transform: scale(0.98);
+}
+.guide-cover-img {
+  width: 100%;
+  height: 280rpx;
+}
+.guide-info {
+  padding: 24rpx 28rpx 28rpx;
+}
+.guide-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2d2a24;
+  display: block;
+  line-height: 1.4;
+}
+.guide-date {
+  font-size: 22rpx;
+  color: #b0a69b;
+  margin-top: 8rpx;
+  display: block;
+}
+.guide-tags {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+.tag-price {
+  background: #f0f7f7;
+  color: #1a7a7a;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 0;
+}
+.empty-icon { font-size: 72rpx; }
+.empty-text {
+  font-size: 28rpx;
+  color: #b0a69b;
+  margin-top: 16rpx;
+}
+
+.re-query {
+  text-align: center;
+  font-size: 26rpx;
+  color: #8a7e72;
+  padding: 24rpx;
+}

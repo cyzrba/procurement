@@ -1,0 +1,44 @@
+<view class="page-guide-list">
+  <!-- 价格区间提示 -->
+  <view class="price-banner">
+    <view class="price-label">匹配价格区间</view>
+    <text class="price-value">{{priceRange.label || '未匹配'}}</text>
+    <text class="price-range">{{priceRangeText}}</text>
+  </view>
+
+  <!-- 指南列表 -->
+  <view class="list-section">
+    <view class="list-header">
+      <text class="list-title">采购指南</text>
+      <text class="list-count">共 {{guides.length}} 条</text>
+    </view>
+
+    <view class="empty-state" wx:if="{{guides.length === 0}}">
+      <text class="empty-icon">📄</text>
+      <text class="empty-text">该条件下暂无采购指南</text>
+    </view>
+
+    <view
+      class="guide-card"
+      wx:for="{{guides}}"
+      wx:key="_id"
+      bindtap="goToDetail" data-id="{{item._id}}"
+    >
+      <view class="guide-cover" wx:if="{{item.coverImage}}">
+        <image class="guide-cover-img" src="{{item.coverImage}}" mode="aspectFill" />
+      </view>
+      <view class="guide-info">
+        <text class="guide-title">{{item.title}}</text>
+        <text class="guide-date">发布: {{item.publishedAt || '待发布'}}</text>
+        <view class="guide-tags">
+          <text class="tag tag-price">{{priceRange.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 重新查询 -->
+  <view class="re-query" bindtap="goBack">
+    ← 重新选择
+  </view>
+</view>

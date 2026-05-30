@@ -1,0 +1,90 @@
+/* ===== 管理首页 ===== */
+.page-admin {
+  min-height: 100vh;
+  background: #f7f3ee;
+  padding-bottom: 60rpx;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 36rpx;
+  background: linear-gradient(135deg, #1a3a3a, #1a7a7a);
+  color: #fff;
+}
+.admin-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  display: block;
+}
+.admin-role {
+  font-size: 24rpx;
+  opacity: 0.75;
+  margin-top: 6rpx;
+  display: block;
+}
+.logout-btn {
+  font-size: 26rpx;
+  opacity: 0.8;
+  padding: 8rpx 20rpx;
+  border: 2rpx solid rgba(255,255,255,0.5);
+  border-radius: 12rpx;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  padding: 32rpx 32rpx 0;
+}
+.grid-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx 28rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+.grid-card:active { transform: scale(0.96); }
+.grid-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  margin-bottom: 16rpx;
+}
+.grid-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #2d2a24;
+  display: block;
+}
+.grid-desc {
+  font-size: 22rpx;
+  color: #8a7e72;
+  margin-top: 6rpx;
+  display: block;
+}
+
+.help-card {
+  margin: 32rpx 32rpx 0;
+  background: #f0ece6;
+  border-radius: 20rpx;
+  padding: 28rpx;
+}
+.help-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2d2a24;
+  display: block;
+}
+.help-text {
+  font-size: 24rpx;
+  color: #6b6058;
+  margin-top: 12rpx;
+  display: block;
+  line-height: 1.5;
+}

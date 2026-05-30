@@ -1,0 +1,73 @@
+<view class="admin-page">
+  <!-- 导入区域 -->
+  <view class="import-section">
+    <view class="import-card">
+      <text class="import-icon">📥</text>
+      <text class="import-title">批量导入用户</text>
+      <text class="import-desc">上传 Excel 文件（.xlsx），表头为"姓名,手机号"</text>
+      <button class="btn-sm" bindtap="chooseFile">选择文件并上传</button>
+      <view class="import-result" wx:if="{{importResult}}">
+        <text class="result-text">成功 {{importResult.success}} / {{importResult.total}} 人</text>
+        <text class="result-fail" wx:if="{{importResult.failed > 0}}">失败 {{importResult.failed}} 人</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 失败详情列表 -->
+  <view class="import-section" wx:if="{{importErrors.length > 0}}">
+    <view class="import-card error-card">
+      <text class="import-icon">⚠️</text>
+      <text class="import-title">导入失败详情</text>
+      <view class="error-list">
+        <view class="error-item" wx:for="{{importErrors}}" wx:key="row">
+          <text class="error-row">第 {{item.row}} 行</text>
+          <text class="error-reason">{{item.reason}}</text>
+        </view>
+      </view>
+      <button class="btn-sm btn-clear" bindtap="clearImportResult">清除记录</button>
+    </view>
+  </view>
+
+  <!-- 用户列表 -->
+  <view class="admin-toolbar">
+    <text class="list-count">共 {{total}} 名用户</text>
+  </view>
+
+  <view class="data-list">
+    <view class="data-item" wx:for="{{list}}" wx:key="_id">
+      <view class="data-main">
+        <text class="data-name">{{item.name}}</text>
+        <text class="data-desc">{{item.phone}}</text>
+      </view>
+      <view class="data-right">
+        <text class="status-tag {{item.status === 'active' ? 'active' : 'disabled'}}">
+          {{item.status === 'active' ? '正常' : '禁用'}}
+        </text>
+        <view class="data-actions">
+          <text class="action-edit" bindtap="showEdit" data-item="{{item}}">编辑</text>
+          <text class="action-del" bindtap="handleDelete" data-item="{{item}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑弹窗 -->
+  <view class="modal-mask" wx:if="{{showModal}}" bindtap="closeModal"></view>
+  <view class="modal" wx:if="{{showModal}}">
+    <text class="modal-title">{{editing ? '编辑用户' : '添加用户'}}</text>
+    <view class="modal-body">
+      <input class="modal-input" placeholder="用户姓名" value="{{formName}}" bindinput="onNameInput" />
+      <input class="modal-input" placeholder="手机号码" type="number" maxlength="11" value="{{formPhone}}" bindinput="onPhoneInput" />
+      <view class="modal-status-row">
+        <text class="modal-status-label">账号状态</text>
+        <picker class="modal-picker" mode="selector" range="{{statusOptions}}" value="{{formStatus === 'active' ? 0 : 1}}" bindchange="onStatusChange">
+          <view>{{formStatus === 'active' ? '正常' : '禁用'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeModal">取消</button>
+      <button class="btn-confirm" bindtap="handleSave">保存</button>
+    </view>
+  </view>
+</view>

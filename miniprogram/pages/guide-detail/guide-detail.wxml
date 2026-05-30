@@ -1,0 +1,45 @@
+<view class="page-guide-detail">
+  <view class="loading" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:if="{{guide}}">
+    <!-- 封面 -->
+    <view class="detail-cover" wx:if="{{guide.coverImage}}">
+      <image class="detail-cover-img" src="{{guide.coverImage}}" mode="aspectFill" />
+    </view>
+
+    <!-- 标题区 -->
+    <view class="detail-header">
+      <text class="detail-title">{{guide.title}}</text>
+      <view class="detail-meta">
+        <text class="meta-item">📅 {{guide.publishedAt || '未发布'}}</text>
+      </view>
+    </view>
+
+    <!-- 富文本内容 -->
+    <view class="detail-content">
+      <rich-text nodes="{{guide.content}}"></rich-text>
+    </view>
+
+    <!-- 附件列表 -->
+    <view class="attachments" wx:if="{{guide.attachments && guide.attachments.length > 0}}">
+      <view class="attachment-header">📎 附件 ({{guide.attachments.length}})</view>
+      <view
+        class="attachment-item"
+        wx:for="{{guide.attachments}}"
+        wx:key="*this"
+        bindtap="downloadFile" data-fileid="{{item.fileId}}" data-name="{{item.name}}"
+      >
+        <view class="attach-icon">
+          <text>{{getFileIcon(item.name)}}</text>
+        </view>
+        <view class="attach-info">
+          <text class="attach-name">{{item.name}}</text>
+          <text class="attach-size" wx:if="{{item.size}}">{{formatSize(item.size)}}</text>
+        </view>
+        <text class="attach-action">下载</text>
+      </view>
+    </view>
+  </block>
+</view>

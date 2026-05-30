@@ -1,0 +1,131 @@
+/* 用户管理 */
+@import '../category/category.wxss';
+
+.import-section {
+  padding: 24rpx 32rpx;
+}
+.import-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 36rpx 28rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  border: 2rpx dashed #d0ccc6;
+}
+.import-icon { font-size: 56rpx; display: block; }
+.import-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2d2a24;
+  display: block;
+  margin-top: 12rpx;
+}
+.import-desc {
+  font-size: 24rpx;
+  color: #8a7e72;
+  display: block;
+  margin: 12rpx 0 24rpx;
+}
+.import-result {
+  margin-top: 20rpx;
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+}
+.result-text { font-size: 26rpx; color: #1a7a7a; }
+.result-fail { font-size: 26rpx; color: #c0392b; }
+.list-count {
+  font-size: 24rpx;
+  color: #8a7e72;
+}
+
+/* 导入失败详情 */
+.error-card {
+  border-color: #e8a838;
+  border-style: solid;
+  text-align: left;
+}
+.error-list {
+  margin: 16rpx 0 20rpx;
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+.error-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0ebe5;
+}
+.error-item:last-child {
+  border-bottom: none;
+}
+.error-row {
+  font-size: 24rpx;
+  color: #8a7e72;
+  width: 120rpx;
+  flex-shrink: 0;
+}
+.error-reason {
+  font-size: 26rpx;
+  color: #c0392b;
+  flex: 1;
+}
+.btn-clear {
+  margin-top: 8rpx;
+}
+
+/* 列表项右对齐 */
+.data-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-shrink: 0;
+}
+
+/* 状态标签 */
+.status-tag {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  text-align: center;
+  min-width: 64rpx;
+  display: inline-block;
+}
+.status-tag.active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.status-tag.disabled {
+  background: #fbe9e7;
+  color: #c62828;
+}
+
+/* 编辑/删除按钮 */
+.action-edit {
+  font-size: 24rpx;
+  color: #1a7a7a;
+  padding: 8rpx 12rpx;
+}
+.action-del {
+  font-size: 24rpx;
+  color: #c0392b;
+  padding: 8rpx 12rpx;
+}
+
+/* 弹窗内状态选择行 */
+.modal-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+.modal-status-label {
+  font-size: 28rpx;
+  color: #2d2a24;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+.modal-picker {
+  flex: 1;
+  min-height: 88rpx;
+}

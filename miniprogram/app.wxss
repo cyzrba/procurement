@@ -1,0 +1,73 @@
+/* ===== 全局样式 ===== */
+
+/* CSS 变量 */
+page {
+  --color-primary: #1a7a7a;
+  --color-primary-dark: #145c5c;
+  --color-primary-light: #e0ecec;
+  --color-accent: #e8a838;
+  --color-accent-dark: #c17a3a;
+  --color-bg: #f7f3ee;
+  --color-surface: #ffffff;
+  --color-text: #2d2a24;
+  --color-text-secondary: #6b6058;
+  --color-text-muted: #8a7e72;
+  --color-text-light: #b0a69b;
+  --color-border: #f0ece6;
+  --color-danger: #c0392b;
+  --radius-sm: 12rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 20rpx;
+  --radius-xl: 24rpx;
+  --shadow-sm: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  --shadow-md: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  --font-base: 28rpx;
+  --font-sm: 24rpx;
+  --font-lg: 32rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-size: var(--font-base);
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+/* 重置 */
+view, text, image, button, input, textarea {
+  box-sizing: border-box;
+}
+button {
+  padding: 0;
+  line-height: inherit;
+  background: none;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+}
+button::after {
+  border: none;
+}
+input, textarea {
+  outline: none;
+  border: none;
+}
+
+/* 通用动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  view, text, image, button, input, textarea, scroll-view, swiper {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 滚动条优化 */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

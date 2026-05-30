@@ -1,0 +1,149 @@
+/* ===== 管理通用样式 ===== */
+page { overflow-x: hidden; }
+.admin-page {
+  min-height: 100vh;
+  background: #f7f3ee;
+  padding-bottom: 60rpx;
+}
+.admin-toolbar {
+  padding: 24rpx 32rpx;
+}
+.btn-sm {
+  background: #1a7a7a;
+  color: #fff;
+  font-size: 26rpx;
+  padding: 16rpx 32rpx;
+  border-radius: 12rpx;
+  border: none;
+  display: inline-block;
+}
+
+.data-list {
+  padding: 0 32rpx;
+}
+.data-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+}
+.data-main { flex: 1; }
+.data-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2d2a24;
+  display: block;
+}
+.data-desc {
+  font-size: 22rpx;
+  color: #8a7e72;
+  margin-top: 6rpx;
+  display: block;
+}
+.data-actions { display: flex; gap: 16rpx; flex-shrink: 0; }
+.action-edit { font-size: 24rpx; color: #1a7a7a; padding: 8rpx; }
+.action-del { font-size: 24rpx; color: #c0392b; padding: 8rpx; }
+
+/* ===== 弹窗 ===== */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+}
+.modal {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 48rpx 40rpx calc(48rpx + env(safe-area-inset-bottom, 20rpx)) 40rpx;
+  z-index: 101;
+  animation: slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2d2a24;
+  margin-bottom: 32rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+/* 弹窗中可滚动的内容区域 */
+.modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  padding: 0 4rpx; /* 防止滚动条遮挡圆角 */
+}
+.modal-input {
+  width: 100%;
+  height: 88rpx;
+  background: #f5f2ed;
+  border-radius: 14rpx;
+  padding: 0 32rpx;
+  font-size: 30rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
+  text-align: center;
+}
+.modal-textarea {
+  width: 100%;
+  background: #f5f2ed;
+  border-radius: 14rpx;
+  padding: 28rpx 32rpx;
+  font-size: 30rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
+  text-align: center;
+}
+/* picker 使用 modal-input 外观但左对齐 */
+.modal-picker {
+  width: 100%;
+  background: #f5f2ed;
+  border-radius: 14rpx;
+  padding: 28rpx 32rpx;
+  font-size: 30rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
+  text-align: left;
+  color: #2d2a24;
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+}
+.modal-textarea {
+  height: 200rpx;
+  text-align: left;
+}
+.modal-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 24rpx;
+  flex-shrink: 0;
+}
+.btn-cancel, .btn-confirm {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 14rpx;
+  font-size: 30rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-cancel { background: #f0ece6; color: #6b6058; }
+.btn-confirm { background: #1a7a7a; color: #fff; }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 120rpx 0; }
+.empty-icon { font-size: 64rpx; }
+.empty-text { font-size: 26rpx; color: #b0a69b; margin-top: 12rpx; }

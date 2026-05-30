@@ -1,0 +1,63 @@
+<view class="page-login">
+  <!-- 背景装饰 -->
+  <view class="bg-shapes">
+    <view class="shape shape-1"></view>
+    <view class="shape shape-2"></view>
+    <view class="shape shape-3"></view>
+    <view class="shape shape-4"></view>
+  </view>
+
+  <view class="login-header">
+    <text class="login-title">院内采购决策树</text>
+    <text class="login-subtitle">采购指南智能推送系统</text>
+  </view>
+
+  <!-- 正在验证登录状态 -->
+  <view class="login-card" wx:if="{{checkingAuth}}">
+    <view class="card-title" style="justify-content:center;">
+      <text>正在验证登录状态...</text>
+    </view>
+    <view style="padding:60rpx 0;text-align:center;">
+      <text style="font-size:64rpx;">⏳</text>
+    </view>
+  </view>
+
+  <!-- 用户登录 -->
+  <view class="login-card" wx:elif="{{loginMode === 'user'}}">
+    <view class="card-title">
+      <text class="card-icon">👤</text>
+      <text>用户登录</text>
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="请输入姓名" model:value="{{name}}" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="请输入手机号" type="number" maxlength="11" model:value="{{phone}}" />
+    </view>
+    <button class="btn-primary" bindtap="handleUserLogin" loading="{{loading}}">登 录</button>
+    <view class="form-footer">
+      <text class="link" bindtap="switchToAdmin">管理员登录 →</text>
+    </view>
+  </view>
+
+  <!-- 管理员登录 -->
+  <view class="login-card admin-card" wx:elif="{{loginMode === 'admin'}}">
+    <view class="card-title">
+      <text class="card-icon">🔐</text>
+      <text>管理员登录</text>
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="请输入用户名" model:value="{{username}}" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="请输入密码" password="true" model:value="{{password}}" />
+    </view>
+    <button class="btn-primary btn-admin" bindtap="handleAdminLogin" loading="{{loading}}">登 录</button>
+    <view class="form-footer">
+      <text class="link" bindtap="switchToUser">← 用户登录</text>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <text class="version">V1.0.0</text>
+</view>

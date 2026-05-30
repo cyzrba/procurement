@@ -1,0 +1,49 @@
+<view class="admin-page">
+  <view class="admin-toolbar">
+    <button class="btn-sm" bindtap="showCreate">+ 新增区间</button>
+  </view>
+
+  <view class="data-list">
+    <view class="data-item" wx:for="{{list}}" wx:key="_id">
+      <view class="data-main">
+        <text class="data-name">{{item.label}}</text>
+        <text class="data-desc">{{item.displayRange}}</text>
+      </view>
+      <view class="data-right">
+        <view class="status-tag {{item.enabled ? 'active' : 'disabled'}}">
+          {{item.enabled ? '启用' : '禁用'}}
+        </view>
+        <view class="data-actions">
+          <text class="action-edit" bindtap="showEdit" data-item="{{item}}">编辑</text>
+          <text class="action-del" bindtap="handleDelete" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 弹窗 -->
+  <view class="modal-mask" wx:if="{{showModal}}" bindtap="closeModal"></view>
+  <view class="modal" wx:if="{{showModal}}">
+    <view class="modal-title">{{editing ? '编辑区间' : '新增区间'}}</view>
+    <view class="modal-body">
+      <input class="modal-input" placeholder="显示名称，如 1000-5000元" model:value="{{formLabel}}" />
+
+      <view class="modal-row">
+        <input class="modal-input flex-1" placeholder="下限(含)" type="number" model:value="{{formMin}}" />
+        <view class="mx-20">
+          <text class="dash-text">—</text>
+        </view>
+        <input class="modal-input flex-1" placeholder="上限(不含)" type="number" model:value="{{formMax}}" />
+      </view>
+
+      <view class="modal-row switch-row">
+        <text class="modal-label">启用</text>
+        <switch checked="{{formEnabled}}" bindchange="toggleEnabled" color="#1a7a7a" />
+      </view>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeModal">取消</button>
+      <button class="btn-confirm" bindtap="handleSave">保存</button>
+    </view>
+  </view>
+</view>

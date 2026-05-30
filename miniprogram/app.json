@@ -1,0 +1,46 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/home/home",
+    "pages/my/my",
+    "pages/guide-list/guide-list",
+    "pages/guide-detail/guide-detail",
+    "pages/messages/messages",
+    "pages/admin/dashboard/dashboard",
+    "pages/admin/category/category",
+    "pages/admin/price-range/price-range",
+    "pages/admin/guide/guide",
+    "pages/admin/user/user",
+    "pages/admin/message/message"
+  ],
+  "window": {
+    "backgroundColor": "#f7f3ee",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#f7f3ee",
+    "navigationBarTitleText": "院内采购决策树",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#8a7e72",
+    "selectedColor": "#1a7a7a",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "采购",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "images/tab-my.png",
+        "selectedIconPath": "images/tab-my-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

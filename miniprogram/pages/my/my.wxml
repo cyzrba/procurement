@@ -1,0 +1,52 @@
+<view class="page-my">
+  <!-- 用户信息卡片 -->
+  <view class="profile-card">
+    <view class="profile-avatar">
+      <text class="avatar-text">{{initial}}</text>
+    </view>
+    <view class="profile-info">
+      <text class="profile-name">{{userName}}</text>
+      <text class="profile-phone">{{userPhone}}</text>
+    </view>
+  </view>
+
+  <!-- 消息中心入口 -->
+  <view class="section">
+    <view class="menu-card" bindtap="goToMessages">
+      <view class="menu-left">
+        <text class="menu-icon">📩</text>
+        <text class="menu-text">消息中心</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 微信通知设置 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">微信通知</text>
+    </view>
+    <view class="subscription-card">
+      <view class="subscription-row">
+        <view class="subscription-desc">
+          <text>接收公告和指南更新的微信通知</text>
+        </view>
+        <switch checked="{{subscribedTemplates.length > 0}}" bindchange="handleSubscribeSwitch" color="#1a7a7a" />
+      </view>
+      <view wx:if="{{subscribedTemplates.length > 0}}" class="subscribed-info">
+        <text>
+          已订阅：
+          <text wx:if="{{subscribedTemplates.indexOf('announcement') > -1}}">公告通知 </text>
+          <text wx:if="{{subscribedTemplates.indexOf('guide_update') > -1}}">指南更新</text>
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出按钮 -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+
+  <text class="version">V1.0.0</text>
+</view>

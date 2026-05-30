@@ -1,0 +1,92 @@
+<view class="page-home">
+  <!-- 顶部欢迎 -->
+  <view class="welcome-bar">
+    <view class="welcome-left">
+      <text class="welcome-greeting">您好, {{userName}}</text>
+      <text class="welcome-hint">{{selectedCategory ? '已选类目，请选择预算区间' : '请选择采购类目'}}</text>
+    </view>
+    <view class="welcome-avatar">
+      <text class="avatar-text">{{initial}}</text>
+    </view>
+  </view>
+
+  <!-- 步骤指示器 -->
+  <view class="steps">
+    <view class="step {{step >= 1 ? 'active' : ''}}">
+      <view class="step-circle">1</view>
+      <text class="step-label">选择类目</text>
+    </view>
+    <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>
+    <view class="step {{step >= 2 ? 'active' : ''}}">
+      <view class="step-circle">2</view>
+      <text class="step-label">选择预算</text>
+    </view>
+    <view class="step-line {{step >= 3 ? 'active' : ''}}"></view>
+    <view class="step {{step >= 3 ? 'active' : ''}}">
+      <view class="step-circle">3</view>
+      <text class="step-label">获取指南</text>
+    </view>
+  </view>
+
+  <!-- 步骤1: 选择类目（可展开显示简介） -->
+  <view class="section" wx:if="{{step === 1}}">
+    <view class="section-title">选择采购类目</view>
+    <view class="category-list">
+      <view
+        class="category-item {{selectedCategory === item._id ? 'selected' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="_id"
+      >
+        <view class="category-top" bindtap="selectCategory" data-id="{{item._id}}" data-name="{{item.name}}">
+          <view class="category-left">
+            <text class="category-icon">{{item.icon || '📦'}}</text>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+          <view class="category-right">
+            <text class="category-arrow {{expandedCategory === item._id ? 'expanded' : ''}}" catchtap="toggleExpand" data-id="{{item._id}}">▼</text>
+          </view>
+        </view>
+        <view class="category-desc-wrap {{expandedCategory === item._id ? 'expanded' : ''}}">
+          <text class="category-desc">{{item.description || '暂无简介'}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{categories.length === 0}}">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">暂无可选类目</text>
+    </view>
+  </view>
+
+  <!-- 步骤2: 选择预算区间 -->
+  <view class="section" wx:elif="{{step === 2}}">
+    <view class="section-title">
+      选择预算区间
+      <text class="section-tag">{{selectedCategoryName}}</text>
+    </view>
+
+    <view class="price-range-list">
+      <view
+        class="price-range-item {{selectedPriceRange === item._id ? 'selected' : ''}}"
+        wx:for="{{priceRanges}}"
+        wx:key="_id"
+        bindtap="selectPriceRange" data-id="{{item._id}}"
+      >
+        <view class="radio-circle {{selectedPriceRange === item._id ? 'checked' : ''}}">
+          <view class="radio-dot" wx:if="{{selectedPriceRange === item._id}}"></view>
+        </view>
+        <view class="price-range-info">
+          <text class="price-range-label">{{item.label}}</text>
+          <text class="price-range-desc">
+            {{item.displayRange}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-bar">
+      <button class="btn-search" bindtap="handleSearch" disabled="{{!selectedPriceRange}}">查 询</button>
+    </view>
+
+    <view class="back-step" bindtap="backToStep1">← 重新选择类目</view>
+  </view>
+</view>

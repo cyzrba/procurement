@@ -1,0 +1,56 @@
+/* 消息推送 */
+@import '../category/category.wxss';
+
+/* 字段小标题，用在 modal-body 内每个字段上方 */
+.modal-section-label {
+  font-size: 24rpx;
+  color: #8a7e72;
+  margin: -8rpx 0 8rpx;
+}
+
+.data-tag {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+.data-time {
+  font-size: 20rpx;
+  color: #b0a69b;
+  margin-top: 6rpx;
+  display: block;
+}
+.tag-announcement {
+  font-size: 22rpx;
+  background: #f5ede0;
+  color: #c17a3a;
+  padding: 4rpx 14rpx;
+  border-radius: 10rpx;
+}
+.tag-guide_update {
+  font-size: 22rpx;
+  background: #e0ecec;
+  color: #1a7a7a;
+  padding: 4rpx 14rpx;
+  border-radius: 10rpx;
+}
+
+.data-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+.btn-subscription-sm {
+  font-size: 22rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 16rpx;
+  background: #f0f5f5;
+  color: #1a7a7a;
+  border: 1rpx solid #c8dcdc;
+  border-radius: 8rpx;
+}
+.btn-subscription-sm:active {
+  background: #dce8e8;
+}
