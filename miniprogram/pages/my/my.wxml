@@ -21,6 +21,17 @@
     </view>
   </view>
 
+  <!-- 我的收藏入口 -->
+  <view class="section">
+    <view class="menu-card" bindtap="goToFavorites">
+      <view class="menu-left">
+        <text class="menu-icon">⭐</text>
+        <text class="menu-text">我的收藏</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
   <!-- 微信通知设置 -->
   <view class="section">
     <view class="section-header">

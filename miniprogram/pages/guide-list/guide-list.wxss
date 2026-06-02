@@ -52,10 +52,36 @@
   overflow: hidden;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  transition: all 0.2s;
+  display: flex;
+  align-items: center;
 }
-.guide-card:active {
-  transform: scale(0.98);
+.guide-main {
+  flex: 1;
+  min-width: 0;
+}
+.guide-main:active {
+  opacity: 0.7;
+}
+.fav-star {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 8rpx;
+}
+.fav-star:active {
+  transform: scale(1.2);
+  transition: transform 0.15s;
+}
+.star-icon {
+  font-size: 48rpx;
+  color: #d0ccc6;
+  transition: color 0.2s;
+}
+.fav-star.active .star-icon {
+  color: #e8a838;
 }
 .guide-cover-img {
   width: 100%;

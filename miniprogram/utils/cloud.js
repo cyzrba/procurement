@@ -63,6 +63,11 @@ module.exports = {
   getMessages: (page, pageSize) => call('message', 'list', { page, pageSize }),
   sendSubscriptionMessage: (messageId) => call('message', 'sendSubscription', { messageId }),
 
+  // 收藏
+  toggleFavorite: (guideId) => call('favorite', 'toggle', { guideId }),
+  getFavorites: () => call('favorite', 'list'),
+  checkFavorites: (guideIds) => call('favorite', 'check', { guideIds }),
+
   // 上传
   getTempFileURL: (fileList) => call('upload', 'getTempFileURL', { fileList }),
 };

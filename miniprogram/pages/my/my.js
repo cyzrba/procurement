@@ -40,6 +40,10 @@ Page({
     wx.navigateTo({ url: '/pages/messages/messages' });
   },
 
+  goToFavorites() {
+    wx.navigateTo({ url: '/pages/favorites/favorites' });
+  },
+
   // 微信通知开关切换
   handleSubscribeSwitch(e) {
     const isOn = e.detail.value;

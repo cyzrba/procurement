@@ -1,0 +1,43 @@
+<view class="page-favorites">
+  <view class="list-header">
+    <text class="list-title">我的收藏</text>
+    <text class="list-count">共 {{filteredGuides.length}} 条</text>
+  </view>
+
+  <scroll-view class="category-tabs" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{categories.length > 0}}">
+    <view class="category-tab {{selectedCategoryId === item._id ? 'active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="_id"
+      bindtap="selectCategory"
+      data-id="{{item._id}}">
+      <text class="category-tab-text">{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="empty-state" wx:if="{{filteredGuides.length === 0}}">
+    <text class="empty-icon">☆</text>
+    <text class="empty-text">{{guides.length > 0 ? '该类目下暂无收藏' : '暂无收藏'}}</text>
+    <text class="empty-hint">{{guides.length > 0 ? '切换到其他类目查看' : '在查询结果中点击星标即可收藏'}}</text>
+  </view>
+
+  <view class="guide-list" wx:if="{{filteredGuides.length > 0}}">
+    <view
+      class="guide-card"
+      wx:for="{{filteredGuides}}"
+      wx:key="_id"
+    >
+      <view class="guide-main" bindtap="goToDetail" data-id="{{item._id}}">
+        <view class="guide-cover" wx:if="{{item.coverImage}}">
+          <image class="guide-cover-img" src="{{item.coverImage}}" mode="aspectFill" />
+        </view>
+        <view class="guide-info">
+          <text class="guide-title">{{item.title}}</text>
+          <text class="guide-date">发布: {{item.publishedAt || '待发布'}}</text>
+        </view>
+      </view>
+      <view class="fav-star active" catchtap="removeFav" data-id="{{item._id}}" data-index="{{index}}">
+        <text class="star-icon">★</text>
+      </view>
+    </view>
+  </view>
+</view>

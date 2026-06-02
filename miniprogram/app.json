@@ -3,6 +3,7 @@
     "pages/login/login",
     "pages/home/home",
     "pages/my/my",
+    "pages/favorites/favorites",
     "pages/guide-list/guide-list",
     "pages/guide-detail/guide-detail",
     "pages/messages/messages",
