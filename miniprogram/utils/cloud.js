@@ -30,6 +30,7 @@ module.exports = {
   getUserInfo: (userId) => call('user', 'getUserInfo', { userId }),
   updateUser: (_id, data) => call('user', 'updateUser', { _id, ...data }),
   deleteUser: (_id) => call('user', 'deleteUser', { _id }),
+  createUser: (name, phone, status) => call('user', 'createUser', { name, phone, status }),
 
   // 类目
   getCategories: (status) => call('category', 'list', { status }),

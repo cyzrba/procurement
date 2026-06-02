@@ -28,6 +28,16 @@
     </view>
   </view>
 
+  <!-- 单独导入 -->
+  <view class="import-section">
+    <view class="import-card import-single-card">
+      <text class="import-icon">👤</text>
+      <text class="import-title">导入用户</text>
+      <text class="import-desc">手动录入单个用户信息</text>
+      <button class="btn-sm" bindtap="showImportModal">导入用户</button>
+    </view>
+  </view>
+
   <!-- 用户列表 -->
   <view class="admin-toolbar">
     <text class="list-count">共 {{total}} 名用户</text>
@@ -40,9 +50,9 @@
         <text class="data-desc">{{item.phone}}</text>
       </view>
       <view class="data-right">
-        <text class="status-tag {{item.status === 'active' ? 'active' : 'disabled'}}">
+        <view class="status-tag {{item.status === 'active' ? 'active' : 'disabled'}}">
           {{item.status === 'active' ? '正常' : '禁用'}}
-        </text>
+        </view>
         <view class="data-actions">
           <text class="action-edit" bindtap="showEdit" data-item="{{item}}">编辑</text>
           <text class="action-del" bindtap="handleDelete" data-item="{{item}}">删除</text>
@@ -68,6 +78,26 @@
     <view class="modal-actions">
       <button class="btn-cancel" bindtap="closeModal">取消</button>
       <button class="btn-confirm" bindtap="handleSave">保存</button>
+    </view>
+  </view>
+
+  <!-- 导入弹窗 -->
+  <view class="modal-mask" wx:if="{{showImportModal}}" bindtap="closeImportModal"></view>
+  <view class="modal" wx:if="{{showImportModal}}">
+    <text class="modal-title">导入用户</text>
+    <view class="modal-body">
+      <input class="modal-input" placeholder="用户姓名" value="{{importFormName}}" bindinput="onImportNameInput" />
+      <input class="modal-input" placeholder="手机号码" type="number" maxlength="11" value="{{importFormPhone}}" bindinput="onImportPhoneInput" />
+      <view class="modal-status-row">
+        <text class="modal-status-label">账号状态</text>
+        <picker class="modal-picker" mode="selector" range="{{statusOptions}}" value="{{importFormStatus === 'active' ? 0 : 1}}" bindchange="onImportStatusChange">
+          <view>{{importFormStatus === 'active' ? '正常' : '禁用'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeImportModal">取消</button>
+      <button class="btn-confirm" bindtap="handleImportSubmit">确认导入</button>
     </view>
   </view>
 </view>

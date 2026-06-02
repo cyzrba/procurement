@@ -74,6 +74,11 @@
   margin-top: 8rpx;
 }
 
+/* 单独导入卡片 */
+.import-single-card {
+  border: 2rpx solid #e8e2d9;
+}
+
 /* 列表项右对齐 */
 .data-right {
   display: flex;
@@ -85,11 +90,11 @@
 /* 状态标签 */
 .status-tag {
   font-size: 22rpx;
-  padding: 4rpx 16rpx;
+  padding: 8rpx 16rpx;
   border-radius: 8rpx;
   text-align: center;
   min-width: 64rpx;
-  display: inline-block;
+  line-height: 1;
 }
 .status-tag.active {
   background: #e8f5e9;

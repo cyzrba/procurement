@@ -27,6 +27,8 @@ exports.main = async (event, context) => {
         return await updateUser(data);
       case 'deleteUser':
         return await deleteUser(data);
+      case 'createUser':
+        return await createUser(data);
       default:
         return { code: -1, message: '未知操作' };
     }
@@ -260,4 +262,31 @@ async function deleteUser(data) {
 
   await db.collection('users').doc(_id).remove();
   return { code: 0, data: { _id } };
+}
+
+async function createUser({ name, phone, status }) {
+  if (!name || !phone) {
+    return { code: 1001, message: '参数缺失' };
+  }
+  if (!/^1\d{10}$/.test(phone)) {
+    return { code: 1001, message: '手机号格式错误' };
+  }
+
+  const exist = await db.collection('users').where({ phone }).get();
+  if (exist.data.length > 0) {
+    return { code: 1006, message: '手机号已被其他用户使用' };
+  }
+
+  const res = await db.collection('users').add({
+    data: {
+      name: name.trim(),
+      phone: phone.trim(),
+      role: 'user',
+      status: status || 'active',
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate()
+    }
+  });
+
+  return { code: 0, data: { _id: res._id, name, phone, status: status || 'active' } };
 }

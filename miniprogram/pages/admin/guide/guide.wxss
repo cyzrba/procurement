@@ -51,8 +51,8 @@
   gap: 20rpx;
   font-size: 24rpx;
 }
-.action-pub { color: #1a7a7a; }
-.action-warn { color: #c17a3a; }
+.action-pub { color: #1a7a7a; padding: 8rpx; }
+.action-warn { color: #c17a3a; padding: 8rpx; }
 
 /* ========== 弹窗扩展 ========== */
 .form-section {

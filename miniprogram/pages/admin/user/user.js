@@ -13,7 +13,12 @@ Page({
     formName: '',
     formPhone: '',
     formStatus: 'active',
-    statusOptions: ['正常', '禁用']
+    statusOptions: ['正常', '禁用'],
+    // 导入弹窗
+    showImportModal: false,
+    importFormName: '',
+    importFormPhone: '',
+    importFormStatus: 'active'
   },
 
   onLoad() { this.loadUsers(); },
@@ -111,7 +116,7 @@ Page({
   },
 
   onStatusChange(e) {
-    const value = e.detail.value === 0 ? 'active' : 'disabled';
+    const value = Number(e.detail.value) === 0 ? 'active' : 'disabled';
     this.setData({ formStatus: value });
   },
 
@@ -166,6 +171,50 @@ Page({
           });
         }
       }
+    });
+  },
+
+  // ===== 单独导入用户 =====
+  showImportModal() {
+    this.setData({
+      showImportModal: true,
+      importFormName: '',
+      importFormPhone: '',
+      importFormStatus: 'active'
+    });
+  },
+
+  closeImportModal() {
+    this.setData({ showImportModal: false });
+  },
+
+  onImportNameInput(e) {
+    this.setData({ importFormName: e.detail.value });
+  },
+
+  onImportPhoneInput(e) {
+    this.setData({ importFormPhone: e.detail.value });
+  },
+
+  onImportStatusChange(e) {
+    const value = Number(e.detail.value) === 0 ? 'active' : 'disabled';
+    this.setData({ importFormStatus: value });
+  },
+
+  handleImportSubmit() {
+    const { importFormName, importFormPhone, importFormStatus } = this.data;
+
+    if (!importFormName.trim()) {
+      return wx.showToast({ title: '请输入用户姓名', icon: 'none' });
+    }
+    if (!/^1\d{10}$/.test(importFormPhone.trim())) {
+      return wx.showToast({ title: '请输入正确的11位手机号', icon: 'none' });
+    }
+
+    cloud.createUser(importFormName.trim(), importFormPhone.trim(), importFormStatus).then(() => {
+      wx.showToast({ title: '导入成功' });
+      this.closeImportModal();
+      this.loadUsers();
     });
   }
 });
