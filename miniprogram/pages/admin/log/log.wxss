@@ -1,0 +1,166 @@
+.page-log {
+  min-height: 100vh;
+  background: #f7f3ee;
+  padding: 32rpx;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.list-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2d2a24;
+}
+.list-count {
+  font-size: 24rpx;
+  color: #8a7e72;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.multi-select-btn {
+  font-size: 24rpx;
+  color: #c0392b;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #e0d8cf;
+}
+.multi-select-btn.active {
+  background: #1a7a7a;
+  color: #fff;
+  border-color: #1a7a7a;
+}
+.select-all-btn {
+  font-size: 24rpx;
+  color: #1a7a7a;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #1a7a7a;
+}
+
+.tab-bar-wrap {
+  margin-bottom: 24rpx;
+}
+.tab-bar {
+  width: 100%;
+  white-space: nowrap;
+  padding-bottom: 8rpx;
+}
+.tab-item {
+  display: inline-block;
+  padding: 14rpx 28rpx;
+  margin-right: 16rpx;
+  border-radius: 32rpx;
+  background: #fff;
+  font-size: 26rpx;
+  color: #6b6058;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.04);
+}
+.tab-item.active {
+  background: #1a7a7a;
+  color: #fff;
+  font-weight: 600;
+}
+.tab-text {
+  display: inline;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #8a7e72;
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.log-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+}
+.log-card.selecting {
+  padding-left: 20rpx;
+}
+
+.select-circle {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+.circle-icon {
+  font-size: 36rpx;
+  color: #c0c0c0;
+}
+.log-card.checked .circle-icon {
+  color: #1a7a7a;
+}
+
+.log-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.log-detail {
+  font-size: 28rpx;
+  color: #2d2a24;
+  display: block;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.log-time {
+  font-size: 22rpx;
+  color: #b0a69b;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.load-more {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 24rpx;
+  color: #b0a69b;
+}
+
+.bottom-delete-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 32rpx 40rpx;
+  background: #f7f3ee;
+}
+.bottom-delete-btn {
+  background: #c0392b;
+  color: #fff;
+  font-size: 30rpx;
+  text-align: center;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-weight: 600;
+}

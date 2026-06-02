@@ -214,7 +214,7 @@ async function getUserInfo(data) {
 
 // 管理员编辑用户（仅限普通用户）
 async function updateUser(data) {
-  const { _id, name, phone, status } = data;
+  const { _id, name, phone, status, operatorId, operatorName } = data;
   if (!_id) {
     return { code: 1001, message: '参数缺失（_id）' };
   }
@@ -242,12 +242,24 @@ async function updateUser(data) {
   updateData.updatedAt = db.serverDate();
 
   await db.collection('users').doc(_id).update({ data: updateData });
+
+  const targetName = name || '';
+  await writeLog({
+    module: 'user',
+    action: 'update',
+    targetId: _id,
+    targetName,
+    detail: `编辑用户「${targetName}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, data: { _id, ...updateData } };
 }
 
 // 管理员删除用户
 async function deleteUser(data) {
-  const { _id } = data;
+  const { _id, operatorId, operatorName } = data;
   if (!_id) {
     return { code: 1001, message: '参数缺失（_id）' };
   }
@@ -260,11 +272,23 @@ async function deleteUser(data) {
     return { code: 1005, message: '不能删除管理员账号' };
   }
 
+  const targetName = res.data.name;
   await db.collection('users').doc(_id).remove();
+
+  await writeLog({
+    module: 'user',
+    action: 'delete',
+    targetId: _id,
+    targetName,
+    detail: `删除用户「${targetName}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, data: { _id } };
 }
 
-async function createUser({ name, phone, status }) {
+async function createUser({ name, phone, status, operatorId, operatorName }) {
   if (!name || !phone) {
     return { code: 1001, message: '参数缺失' };
   }
@@ -288,5 +312,42 @@ async function createUser({ name, phone, status }) {
     }
   });
 
+  await writeLog({
+    module: 'user',
+    action: 'create',
+    targetId: res._id,
+    targetName: name.trim(),
+    detail: `新增用户「${name.trim()}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, data: { _id: res._id, name, phone, status: status || 'active' } };
+}
+
+async function writeLog(logData) {
+  try {
+    await db.collection('admin_logs').add({
+      data: {
+        ...logData,
+        createdAt: db.serverDate()
+      }
+    });
+  } catch (err) {
+    if (err.errCode === -502005 || (err.message && err.message.includes('not exist'))) {
+      try {
+        await db.createCollection('admin_logs');
+        await db.collection('admin_logs').add({
+          data: {
+            ...logData,
+            createdAt: db.serverDate()
+          }
+        });
+      } catch (e2) {
+        console.error('[user] 创建集合或写入失败:', e2);
+      }
+    } else {
+      console.error('[user] 日志写入失败:', err);
+    }
+  }
 }

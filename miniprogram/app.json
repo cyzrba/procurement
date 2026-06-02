@@ -12,7 +12,8 @@
     "pages/admin/price-range/price-range",
     "pages/admin/guide/guide",
     "pages/admin/user/user",
-    "pages/admin/message/message"
+    "pages/admin/message/message",
+    "pages/admin/log/log"
   ],
   "window": {
     "backgroundColor": "#f7f3ee",

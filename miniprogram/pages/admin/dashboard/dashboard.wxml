@@ -37,6 +37,11 @@
       <text class="grid-name">消息推送</text>
       <text class="grid-desc">通知发送与管理</text>
     </view>
+    <view class="grid-card" bindtap="goTo" data-page="log">
+      <view class="grid-icon" style="background:#f5ede0;">📋</view>
+      <text class="grid-name">管理员日志</text>
+      <text class="grid-desc">操作记录查看审计</text>
+    </view>
   </view>
 
   <!-- 快速帮助 -->

@@ -20,6 +20,8 @@ exports.main = async (event, context) => {
 
 async function importUsers(data) {
   const fileId = data && data.fileId;
+  const operatorId = data && data.operatorId;
+  const operatorName = data && data.operatorName;
   if (!fileId || typeof fileId !== 'string') {
     console.error('[importUsers] 参数错误: fileId =', fileId, 'data =', JSON.stringify(data));
     return { code: 1001, message: '参数缺失（fileId 无效）' };
@@ -97,6 +99,15 @@ async function importUsers(data) {
       }
     }
 
+    await writeLog({
+      module: 'user',
+      action: 'import',
+      targetName: `批量导入`,
+      detail: `批量导入用户 (成功 ${result.success} 人，失败 ${result.failed} 人)`,
+      operatorId,
+      operatorName
+    });
+
     return { code: 0, data: result };
   } catch (err) {
     console.error('[importUsers] 错误:', err);
@@ -107,5 +118,32 @@ async function importUsers(data) {
       message = '解析失败: ' + err.message;
     }
     return { code: 500, message };
+  }
+}
+
+async function writeLog(logData) {
+  try {
+    await db.collection('admin_logs').add({
+      data: {
+        ...logData,
+        createdAt: db.serverDate()
+      }
+    });
+  } catch (err) {
+    if (err.errCode === -502005 || (err.message && err.message.includes('not exist'))) {
+      try {
+        await db.createCollection('admin_logs');
+        await db.collection('admin_logs').add({
+          data: {
+            ...logData,
+            createdAt: db.serverDate()
+          }
+        });
+      } catch (e2) {
+        console.error('[userImport] 创建集合或写入失败:', e2);
+      }
+    } else {
+      console.error('[userImport] 日志写入失败:', err);
+    }
   }
 }

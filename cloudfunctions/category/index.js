@@ -24,7 +24,7 @@ exports.main = async (event, context) => {
   }
 };
 
-async function createCategory({ name, description }) {
+async function createCategory({ name, description, operatorId, operatorName }) {
   if (!name) return { code: 1001, message: '类目名称必填' };
 
   // 检查是否已存在
@@ -43,10 +43,20 @@ async function createCategory({ name, description }) {
     }
   });
 
+  await writeLog({
+    module: 'category',
+    action: 'create',
+    targetId: res._id,
+    targetName: name,
+    detail: `新增类目「${name}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, data: { _id: res._id } };
 }
 
-async function updateCategory({ _id, name, description }) {
+async function updateCategory({ _id, name, description, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
 
   const updateData = { updatedAt: db.serverDate() };
@@ -54,11 +64,26 @@ async function updateCategory({ _id, name, description }) {
   if (description !== undefined) updateData.description = description;
 
   await db.collection('categories').doc(_id).update({ data: updateData });
+
+  const targetName = name || '';
+  await writeLog({
+    module: 'category',
+    action: 'update',
+    targetId: _id,
+    targetName,
+    detail: `编辑类目「${targetName}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, message: '更新成功' };
 }
 
-async function deleteCategory({ _id }) {
+async function deleteCategory({ _id, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
+
+  // 先获取类目名称
+  const cat = await db.collection('categories').doc(_id).get();
 
   // 检查是否有关联指南
   const guides = await db.collection('guides').where({ categoryId: _id }).get();
@@ -67,6 +92,17 @@ async function deleteCategory({ _id }) {
   }
 
   await db.collection('categories').doc(_id).remove();
+
+  await writeLog({
+    module: 'category',
+    action: 'delete',
+    targetId: _id,
+    targetName: cat.data ? cat.data.name : '',
+    detail: `删除类目「${cat.data ? cat.data.name : ''}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, message: '删除成功' };
 }
 
@@ -84,4 +120,31 @@ async function listCategories({ status } = {}) {
       _id, name, description, status
     }))
   };
+}
+
+async function writeLog(logData) {
+  try {
+    await db.collection('admin_logs').add({
+      data: {
+        ...logData,
+        createdAt: db.serverDate()
+      }
+    });
+  } catch (err) {
+    if (err.errCode === -502005 || (err.message && err.message.includes('not exist'))) {
+      try {
+        await db.createCollection('admin_logs');
+        await db.collection('admin_logs').add({
+          data: {
+            ...logData,
+            createdAt: db.serverDate()
+          }
+        });
+      } catch (e2) {
+        console.error('[category] 创建集合或写入失败:', e2);
+      }
+    } else {
+      console.error('[category] 日志写入失败:', err);
+    }
+  }
 }

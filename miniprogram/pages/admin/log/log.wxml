@@ -1,0 +1,50 @@
+<view class="page-log">
+  <view class="list-header">
+    <text class="list-title">管理员日志</text>
+    <view class="header-actions">
+      <text class="select-all-btn" wx:if="{{selectingMode}}" bindtap="selectAll">全选</text>
+      <text class="multi-select-btn {{selectingMode ? 'active' : ''}}" bindtap="toggleSelectingMode">{{selectingMode ? '取消' : '多选'}}</text>
+      <text class="list-count">共 {{total}} 条</text>
+    </view>
+  </view>
+
+  <view class="tab-bar-wrap">
+    <scroll-view class="tab-bar" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="tab-item {{activeTab === index ? 'active' : ''}}"
+        wx:for="{{tabs}}" wx:key="key"
+        bindtap="switchTab" data-index="{{index}}">
+        <text class="tab-text">{{item.label}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="empty-state" wx:if="{{logs.length === 0 && !loading}}">
+    <text class="empty-text">暂无操作日志</text>
+  </view>
+
+  <view class="log-list" wx:if="{{logs.length > 0}}">
+    <view
+      class="log-card {{selectingMode ? 'selecting' : ''}} {{selectedIds[item._id] ? 'checked' : ''}}"
+      wx:for="{{logs}}" wx:key="_id"
+      bindtap="{{selectingMode ? 'toggleSelect' : ''}}"
+      data-id="{{item._id}}">
+      <view class="select-circle" wx:if="{{selectingMode}}">
+        <text class="circle-icon">{{selectedIds[item._id] ? '●' : '○'}}</text>
+      </view>
+      <view class="log-content">
+        <text class="log-detail">{{item.detail}}</text>
+        <text class="log-time">{{item.timeDisplay}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="bottom-delete-bar" wx:if="{{selectingMode && selectedCount > 0}}">
+    <view class="bottom-delete-btn" bindtap="confirmDelete">
+      <text>删除选中 ({{selectedCount}})</text>
+    </view>
+  </view>
+</view>

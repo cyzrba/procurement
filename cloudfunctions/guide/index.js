@@ -12,9 +12,9 @@ exports.main = async (event, context) => {
       case 'update':
         return await updateGuide(data);
       case 'publish':
-        return await setGuideStatus({ _id: data._id, status: 'published' });
+        return await setGuideStatus({ _id: data._id, status: 'published', operatorId: data.operatorId, operatorName: data.operatorName });
       case 'unpublish':
-        return await setGuideStatus({ _id: data._id, status: 'unpublished' });
+        return await setGuideStatus({ _id: data._id, status: 'unpublished', operatorId: data.operatorId, operatorName: data.operatorName });
       case 'delete':
         return await deleteGuide(data);
       case 'list':
@@ -54,6 +54,16 @@ async function createGuide(data) {
     }
   });
 
+  await writeLog({
+    module: 'guide',
+    action: 'create',
+    targetId: res._id,
+    targetName: title,
+    detail: `新增采购指南「${title}」`,
+    operatorId: data.operatorId,
+    operatorName: data.operatorName
+  });
+
   return { code: 0, data: { _id: res._id } };
 }
 
@@ -67,22 +77,63 @@ async function updateGuide(data) {
   });
 
   await db.collection('guides').doc(data._id).update({ data: updateData });
+
+  await writeLog({
+    module: 'guide',
+    action: 'update',
+    targetId: data._id,
+    targetName: data.title || '',
+    detail: `编辑采购指南「${data.title || ''}」`,
+    operatorId: data.operatorId,
+    operatorName: data.operatorName
+  });
+
   return { code: 0, message: '更新成功' };
 }
 
-async function setGuideStatus({ _id, status }) {
+async function setGuideStatus({ _id, status, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
+
+  const guide = await db.collection('guides').doc(_id).get();
+  const title = guide.data ? guide.data.title : '';
 
   const updateData = { status, updatedAt: db.serverDate() };
   if (status === 'published') updateData.publishedAt = db.serverDate();
 
   await db.collection('guides').doc(_id).update({ data: updateData });
+
+  const actionLabel = status === 'published' ? '发布' : '下架';
+  await writeLog({
+    module: 'guide',
+    action: status === 'published' ? 'publish' : 'unpublish',
+    targetId: _id,
+    targetName: title,
+    detail: `${actionLabel}采购指南「${title}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, message: status === 'published' ? '发布成功' : '已下架' };
 }
 
-async function deleteGuide({ _id }) {
+async function deleteGuide({ _id, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
+
+  const guide = await db.collection('guides').doc(_id).get();
+  const title = guide.data ? guide.data.title : '';
+
   await db.collection('guides').doc(_id).remove();
+
+  await writeLog({
+    module: 'guide',
+    action: 'delete',
+    targetId: _id,
+    targetName: title,
+    detail: `删除采购指南「${title}」`,
+    operatorId,
+    operatorName
+  });
+
   return { code: 0, message: '删除成功' };
 }
 
@@ -168,4 +219,31 @@ async function matchGuides({ categoryId, priceRangeId }) {
       }))
     }
   };
+}
+
+async function writeLog(logData) {
+  try {
+    await db.collection('admin_logs').add({
+      data: {
+        ...logData,
+        createdAt: db.serverDate()
+      }
+    });
+  } catch (err) {
+    if (err.errCode === -502005 || (err.message && err.message.includes('not exist'))) {
+      try {
+        await db.createCollection('admin_logs');
+        await db.collection('admin_logs').add({
+          data: {
+            ...logData,
+            createdAt: db.serverDate()
+          }
+        });
+      } catch (e2) {
+        console.error('[guide] 创建集合或写入失败:', e2);
+      }
+    } else {
+      console.error('[guide] 日志写入失败:', err);
+    }
+  }
 }
