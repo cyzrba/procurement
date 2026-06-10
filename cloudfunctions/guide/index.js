@@ -33,19 +33,46 @@ exports.main = async (event, context) => {
 };
 
 async function createGuide(data) {
-  const { title, content, categoryId, priceRangeId } = data;
-  if (!title || !content || !categoryId || !priceRangeId) {
-    return { code: 1001, message: '参数缺失（标题、内容、类目、价格区间为必填）' };
+  const { title, preparation, processSteps, categoryId, priceRangeId } = data;
+  if (!title || !preparation || !categoryId || !priceRangeId) {
+    return { code: 1001, message: '参数缺失（标题、前期准备、类目、价格区间为必填）' };
+  }
+  if (!processSteps || !Array.isArray(processSteps) || processSteps.length === 0) {
+    return { code: 1001, message: '参数缺失（至少需要一个采购流程步骤）' };
   }
 
   const res = await db.collection('guides').add({
     data: {
       title,
-      coverImage: data.coverImage || '',
-      content,
+      preparation,
+      processSteps: processSteps.map((step, i) => {
+        const stepData = {
+          stepOrder: i + 1,
+          description: step.description || '',
+          media: (step.media || []).map(m => ({
+            name: m.name,
+            fileId: m.fileId,
+            size: m.size,
+            type: m.type
+          }))
+        };
+
+        if (step.groups && step.groups.length > 0) {
+          stepData.groups = step.groups.map(g => ({
+            title: g.title || '',
+            media: (g.media || []).map(m => ({
+              name: m.name,
+              fileId: m.fileId,
+              size: m.size,
+              type: m.type
+            }))
+          }));
+        }
+
+        return stepData;
+      }),
       categoryId,
       priceRangeId,
-      attachments: data.attachments || [],
       status: data.status || 'draft',
       publishedAt: null,
       createdBy: data.createdBy || '',
@@ -71,7 +98,7 @@ async function updateGuide(data) {
   if (!data._id) return { code: 1001, message: '参数缺失' };
 
   const updateData = { updatedAt: db.serverDate() };
-  const fields = ['title', 'coverImage', 'content', 'categoryId', 'priceRangeId', 'attachments', 'status'];
+  const fields = ['title', 'preparation', 'processSteps', 'categoryId', 'priceRangeId', 'status'];
   fields.forEach(f => {
     if (data[f] !== undefined) updateData[f] = data[f];
   });
@@ -158,8 +185,8 @@ async function listGuides({ status, categoryId, page = 1, pageSize = 20 } = {}) 
       total,
       page,
       pageSize,
-      list: res.data.map(({ _id, title, coverImage, categoryId, priceRangeId, status, publishedAt, createdAt, updatedAt }) => ({
-        _id, title, coverImage, categoryId, priceRangeId, status, publishedAt, createdAt, updatedAt
+      list: res.data.map(({ _id, title, categoryId, priceRangeId, status, publishedAt, createdAt, updatedAt }) => ({
+        _id, title, categoryId, priceRangeId, status, publishedAt, createdAt, updatedAt
       }))
     }
   };
@@ -214,8 +241,8 @@ async function matchGuides({ categoryId, priceRangeId }) {
         min: priceRange.min,
         max: priceRange.max
       },
-      guides: guideRes.data.map(({ _id, title, coverImage, publishedAt }) => ({
-        _id, title, coverImage, publishedAt
+      guides: guideRes.data.map(({ _id, title, publishedAt }) => ({
+        _id, title, publishedAt
       }))
     }
   };

@@ -4,41 +4,115 @@
   </view>
 
   <block wx:if="{{guide}}">
-    <!-- 封面 -->
-    <view class="detail-cover" wx:if="{{guide.coverImage}}">
-      <image class="detail-cover-img" src="{{guide.coverImage}}" mode="aspectFill" />
-    </view>
-
-    <!-- 标题区 -->
     <view class="detail-header">
       <text class="detail-title">{{guide.title}}</text>
       <view class="detail-meta">
-        <text class="meta-item">📅 {{guide.publishedAt || '未发布'}}</text>
+        <text class="meta-item">📅 {{guide._publishedText || '未发布'}}</text>
       </view>
     </view>
 
-    <!-- 富文本内容 -->
-    <view class="detail-content">
-      <rich-text nodes="{{guide.content}}"></rich-text>
+    <!-- 前期准备 -->
+    <view class="detail-section">
+      <view class="section-label">前期准备</view>
+      <view class="prep-content">
+        <text>{{guide.preparation}}</text>
+      </view>
     </view>
 
-    <!-- 附件列表 -->
-    <view class="attachments" wx:if="{{guide.attachments && guide.attachments.length > 0}}">
-      <view class="attachment-header">📎 附件 ({{guide.attachments.length}})</view>
-      <view
-        class="attachment-item"
-        wx:for="{{guide.attachments}}"
-        wx:key="*this"
-        bindtap="downloadFile" data-fileid="{{item.fileId}}" data-name="{{item.name}}"
-      >
-        <view class="attach-icon">
-          <text>{{getFileIcon(item.name)}}</text>
+    <!-- 采购流程 -->
+    <view class="detail-section">
+      <view class="section-label">采购流程</view>
+
+      <view class="process-step" wx:for="{{guide._processSteps}}" wx:key="stepOrder">
+        <view class="step-indicator">
+          <view class="step-dot-wrapper">
+            <view class="step-dot">
+              <text>{{item.stepOrder || index + 1}}</text>
+            </view>
+          </view>
+          <view class="step-line" wx:if="{{index < guide._processSteps.length - 1}}"></view>
         </view>
-        <view class="attach-info">
-          <text class="attach-name">{{item.name}}</text>
-          <text class="attach-size" wx:if="{{item.size}}">{{formatSize(item.size)}}</text>
+        <view class="step-content">
+          <text class="step-desc">{{item.description}}</text>
+
+          <!-- 有分组 -->
+          <block wx:if="{{item._hasGroups}}">
+            <view class="detail-groups">
+              <view class="detail-group" wx:for="{{item._groups}}" wx:for-item="grp" wx:key="*this">
+                <text class="detail-group-title">{{grp.title}}</text>
+                <view class="step-media" wx:if="{{grp._imageUrls.length > 0 || grp._videoItems.length > 0 || grp._documents.length > 0}}">
+                  <view class="image-grid" wx:if="{{grp._imageUrls.length > 0}}">
+                    <image wx:for="{{grp._imageUrls}}" wx:for-item="url" wx:key="*this"
+                      class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
+                      bindtap="previewImage" data-urls="{{grp._imageUrls}}" data-current="{{url}}" />
+                  </view>
+                   <view class="video-list" wx:if="{{grp._videoItems.length > 0}}">
+                    <view class="video-item" wx:for="{{grp._videoItems}}" wx:for-item="v" wx:key="fileId">
+                      <video class="step-video" src="{{v.url}}" controls show-play-btn object-fit="contain" />
+                      <text class="video-save-btn" bindtap="saveVideo" data-url="{{v.url}}">📥 保存视频</text>
+                    </view>
+                  </view>
+                  <view class="doc-list" wx:if="{{grp._documents.length > 0}}">
+                    <view class="doc-item" wx:for="{{grp._documents}}" wx:for-item="doc" wx:key="fileId"
+                      bindtap="openDocMenu" data-fileid="{{doc.fileId}}" data-name="{{doc.name}}">
+                      <text class="doc-icon">{{getFileIcon(doc.name)}}</text>
+                      <view class="doc-info">
+                        <text class="doc-name">{{doc.name}}</text>
+                        <text class="doc-size">{{formatSize(doc.size)}}</text>
+                </view>
+              </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </block>
+
+          <!-- 无分组 -->
+          <view class="step-media" wx:elif="{{item._imageUrls.length > 0 || item._videoItems.length > 0 || item._documents.length > 0}}">
+            <!-- 图片网格 -->
+            <view class="image-grid" wx:if="{{item._imageUrls.length > 0}}">
+              <image
+                wx:for="{{item._imageUrls}}"
+                wx:for-item="url"
+                wx:key="*this"
+                class="grid-image"
+                src="{{url}}"
+                mode="aspectFill"
+                show-menu-by-longpress
+                bindtap="previewImage"
+                data-urls="{{item._imageUrls}}"
+                data-current="{{url}}"
+              />
+            </view>
+
+            <!-- 视频 -->
+            <view class="video-list" wx:if="{{item._videoItems.length > 0}}">
+              <view class="video-item" wx:for="{{item._videoItems}}" wx:for-item="v" wx:key="fileId">
+                <video class="step-video" src="{{v.url}}" controls show-play-btn object-fit="contain" />
+                <text class="video-save-btn" bindtap="saveVideo" data-url="{{v.url}}">📥 保存视频</text>
+              </view>
+            </view>
+
+            <!-- 文档 -->
+            <view class="doc-list" wx:if="{{item._documents.length > 0}}">
+              <view
+                class="doc-item"
+                wx:for="{{item._documents}}"
+                wx:for-item="doc"
+                wx:key="fileId"
+                bindtap="openDocMenu"
+                data-fileid="{{doc.fileId}}"
+                data-name="{{doc.name}}"
+              >
+                <text class="doc-icon">{{getFileIcon(doc.name)}}</text>
+                <view class="doc-info">
+                  <text class="doc-name">{{doc.name}}</text>
+                  <text class="doc-size">{{formatSize(doc.size)}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
         </view>
-        <text class="attach-action">下载</text>
       </view>
     </view>
   </block>

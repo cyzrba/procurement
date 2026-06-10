@@ -14,17 +14,13 @@ Page({
     editingId: null,
     categories: [],
     priceRanges: [],
-    categoryOptions: [],        // 含 "请选择" 占位
-    priceRangeOptions: [],      // 含 "请选择" 占位
-    formCategoryIdx: 0,         // 0 = 未选择
-    formPriceIdx: 0,            // 0 = 未选择
+    categoryOptions: [],
+    priceRangeOptions: [],
+    formCategoryIdx: 0,
+    formPriceIdx: 0,
     formTitle: '',
-    formCover: '',
-    formCoverPreview: '',       // 预览用临时 URL
-    formContent: '',
-    formAttachments: '[]',      // JSON 字符串
-    formAttachmentList: [],     // 解析后的附件数组（含图标）
-    uploadLoading: false
+    formPreparation: '',
+    formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }]
   },
 
   onLoad() {
@@ -74,11 +70,8 @@ Page({
       showModal: true,
       editingId: null,
       formTitle: '',
-      formCover: '',
-      formCoverPreview: '',
-      formContent: '',
-      formAttachments: '[]',
-      formAttachmentList: [],
+      formPreparation: '',
+      formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
       formCategoryIdx: 0,
       formPriceIdx: 0
     });
@@ -87,33 +80,265 @@ Page({
   closeModal() { this.setData({ showModal: false }); },
 
   pickCategory(e) {
-    const idx = parseInt(e.detail.value, 10);
-    this.setData({ formCategoryIdx: idx });
+    this.setData({ formCategoryIdx: parseInt(e.detail.value, 10) });
   },
 
   pickPriceRange(e) {
-    const idx = parseInt(e.detail.value, 10);
-    this.setData({ formPriceIdx: idx });
+    this.setData({ formPriceIdx: parseInt(e.detail.value, 10) });
   },
 
-  // ==================== 附件列表同步 ====================
-  // WXML 不支持调用 JSON.parse，所以需要维护一个解析好的数组
-  syncFormAttachmentList() {
-    let list = [];
-    try {
-      list = JSON.parse(this.data.formAttachments || '[]');
-    } catch (e) {
-      list = [];
+  // ==================== 步骤管理 ====================
+  addStep() {
+    const steps = this.data.formSteps;
+    steps.push({ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] });
+    this.setData({ formSteps: steps });
+  },
+
+  removeStep(e) {
+    const idx = e.currentTarget.dataset.index;
+    const steps = this.data.formSteps;
+    if (steps.length <= 1) {
+      return wx.showToast({ title: '至少保留一个步骤', icon: 'none' });
     }
-    // 为每个附件计算图标和可读大小
-    list = list.map(item => ({
-      ...item,
-      icon: this.getFileIcon(item.name),
-      sizeDisplay: this.formatSize(item.size)
-    }));
-    this.setData({ formAttachmentList: list });
+    steps.splice(idx, 1);
+    this.setData({ formSteps: steps });
   },
 
+  onStepDescInput(e) {
+    const idx = e.currentTarget.dataset.index;
+    const steps = this.data.formSteps;
+    steps[idx].description = e.detail.value;
+    this.setData({ formSteps: steps });
+  },
+
+  // ==================== 分组开关 ====================
+  toggleGroupMode(e) {
+    const idx = e.currentTarget.dataset.index;
+    const steps = this.data.formSteps;
+    const step = steps[idx];
+    step.hasGroups = !step.hasGroups;
+
+    if (step.hasGroups && step.groups.length === 0) {
+      step.groups = [{ title: '', media: [], _mediaDisplay: [] }];
+    }
+
+    this.setData({ formSteps: steps });
+  },
+
+  // ==================== 分组管理 ====================
+  addGroup(e) {
+    const stepIdx = e.currentTarget.dataset.stepIdx;
+    const steps = this.data.formSteps;
+    steps[stepIdx].groups.push({ title: '', media: [], _mediaDisplay: [] });
+    this.setData({ formSteps: steps });
+  },
+
+  removeGroup(e) {
+    const stepIdx = e.currentTarget.dataset.stepIdx;
+    const groupIdx = e.currentTarget.dataset.groupIdx;
+    const steps = this.data.formSteps;
+    steps[stepIdx].groups.splice(groupIdx, 1);
+    this.setData({ formSteps: steps });
+  },
+
+  onGroupTitleInput(e) {
+    const stepIdx = e.currentTarget.dataset.stepIdx;
+    const groupIdx = e.currentTarget.dataset.groupIdx;
+    const steps = this.data.formSteps;
+    steps[stepIdx].groups[groupIdx].title = e.detail.value;
+    this.setData({ formSteps: steps });
+  },
+
+  // ==================== 步骤媒体上传（无分组） ====================
+  chooseStepMedia(e) {
+    const stepIdx = e.currentTarget.dataset.index;
+    wx.showActionSheet({
+      itemList: ['附件 (PDF/DOCX)', '图片 (JPG/PNG)', '视频 (MP4)'],
+      success: (res) => {
+        switch (res.tapIndex) {
+          case 0: this.pickDocuments(stepIdx, null); break;
+          case 1: this.pickImages(stepIdx, null); break;
+          case 2: this.pickVideos(stepIdx, null); break;
+        }
+      }
+    });
+  },
+
+  // ==================== 分组媒体上传 ====================
+  chooseGroupMedia(e) {
+    const stepIdx = e.currentTarget.dataset.stepIdx;
+    const groupIdx = e.currentTarget.dataset.groupIdx;
+    wx.showActionSheet({
+      itemList: ['附件 (PDF/DOCX)', '图片 (JPG/PNG)', '视频 (MP4)'],
+      success: (res) => {
+        switch (res.tapIndex) {
+          case 0: this.pickDocuments(stepIdx, groupIdx); break;
+          case 1: this.pickImages(stepIdx, groupIdx); break;
+          case 2: this.pickVideos(stepIdx, groupIdx); break;
+        }
+      }
+    });
+  },
+
+  pickDocuments(stepIdx, groupIdx) {
+    wx.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      success: (res) => {
+        const files = res.tempFiles.filter(f => {
+          const ext = (f.name || '').split('.').pop().toLowerCase();
+          if (!['pdf', 'docx'].includes(ext)) {
+            wx.showToast({ title: `${f.name} 格式不支持，仅支持 PDF、DOCX`, icon: 'none' });
+            return false;
+          }
+          return true;
+        });
+        if (files.length === 0) return;
+        this.uploadFiles(stepIdx, groupIdx, files, 'document');
+      }
+    });
+  },
+
+  pickImages(stepIdx, groupIdx) {
+    wx.chooseImage({
+      count: 9,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const files = res.tempFiles.filter(f => {
+          const path = (f.path || f.tempFilePath || '');
+          const ext = path.split('.').pop().toLowerCase();
+          if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+            wx.showToast({ title: '仅支持 JPG/JPEG/PNG 格式', icon: 'none' });
+            return false;
+          }
+          return true;
+        });
+        if (files.length === 0) return;
+        const items = files.map(f => ({
+          path: f.path || f.tempFilePath,
+          size: f.size || 0,
+          name: (f.path || f.tempFilePath || '').split('/').pop() || `image_${Date.now()}.jpg`
+        }));
+        this.uploadFiles(stepIdx, groupIdx, items, 'image');
+      }
+    });
+  },
+
+  pickVideos(stepIdx, groupIdx) {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['video'],
+      sourceType: ['album', 'camera'],
+      maxDuration: 600,
+      success: (res) => {
+        const file = res.tempFiles[0];
+        if (!file) return;
+        const path = file.tempFilePath || '';
+        const ext = path.split('.').pop().toLowerCase();
+        if (ext !== 'mp4') {
+          return wx.showToast({ title: '仅支持 MP4 格式', icon: 'none' });
+        }
+        this.uploadFiles(stepIdx, groupIdx, [{
+          path,
+          size: file.size || 0,
+          name: `video_${Date.now()}.mp4`
+        }], 'video');
+      }
+    });
+  },
+
+  uploadFiles(stepIdx, groupIdx, files, type) {
+    wx.showLoading({ title: '上传中...' });
+    const dirMap = { document: 'documents', image: 'images', video: 'videos' };
+    const dir = dirMap[type] || 'attachments';
+
+    const uploads = files.map(file => {
+      const dotIdx = file.name.lastIndexOf('.');
+      const ext = dotIdx > -1 ? file.name.slice(dotIdx) : '';
+      const cloudPath = `${dir}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
+
+      return wx.cloud.uploadFile({
+        cloudPath,
+        filePath: file.path
+      }).then(uploadRes => ({
+        name: file.name,
+        fileId: uploadRes.fileID,
+        size: file.size || 0,
+        type
+      }));
+    });
+
+    Promise.all(uploads).then(results => {
+      wx.hideLoading();
+      const steps = this.data.formSteps;
+
+      if (groupIdx !== null && groupIdx !== undefined) {
+        steps[stepIdx].groups[groupIdx].media = [
+          ...(steps[stepIdx].groups[groupIdx].media || []),
+          ...results
+        ];
+        this.setData({ formSteps: steps });
+        this.syncGroupMediaDisplay(stepIdx, groupIdx);
+      } else {
+        steps[stepIdx].media = [...(steps[stepIdx].media || []), ...results];
+        this.setData({ formSteps: steps });
+        this.syncStepMediaDisplay(stepIdx);
+      }
+
+      wx.showToast({ title: `已上传 ${results.length} 个文件`, icon: 'success' });
+    }).catch(err => {
+      wx.hideLoading();
+      console.error('[upload error]', err);
+      wx.showToast({ title: '上传失败', icon: 'none' });
+    });
+  },
+
+  // ==================== 步骤媒体展示同步 ====================
+  syncStepMediaDisplay(stepIdx) {
+    const step = this.data.formSteps[stepIdx];
+    const display = (step.media || []).map(m => ({
+      ...m,
+      icon: this.getFileIcon(m.name),
+      sizeDisplay: this.formatSize(m.size)
+    }));
+    const steps = this.data.formSteps;
+    steps[stepIdx]._mediaDisplay = display;
+    this.setData({ formSteps: steps });
+  },
+
+  syncGroupMediaDisplay(stepIdx, groupIdx) {
+    const group = this.data.formSteps[stepIdx].groups[groupIdx];
+    const display = (group.media || []).map(m => ({
+      ...m,
+      icon: this.getFileIcon(m.name),
+      sizeDisplay: this.formatSize(m.size)
+    }));
+    const steps = this.data.formSteps;
+    steps[stepIdx].groups[groupIdx]._mediaDisplay = display;
+    this.setData({ formSteps: steps });
+  },
+
+  removeStepMedia(e) {
+    const stepIdx = e.currentTarget.dataset.step;
+    const midx = e.currentTarget.dataset.midx;
+    const steps = this.data.formSteps;
+    steps[stepIdx].media.splice(midx, 1);
+    this.setData({ formSteps: steps });
+    this.syncStepMediaDisplay(stepIdx);
+  },
+
+  removeGroupMedia(e) {
+    const stepIdx = e.currentTarget.dataset.stepIdx;
+    const groupIdx = e.currentTarget.dataset.groupIdx;
+    const midx = e.currentTarget.dataset.midx;
+    const steps = this.data.formSteps;
+    steps[stepIdx].groups[groupIdx].media.splice(midx, 1);
+    this.setData({ formSteps: steps });
+    this.syncGroupMediaDisplay(stepIdx, groupIdx);
+  },
+
+  // ==================== 工具方法 ====================
   formatSize(bytes) {
     if (!bytes && bytes !== 0) return '';
     if (bytes < 1024) return bytes + 'B';
@@ -128,100 +353,16 @@ Page({
     return map[ext] || '📄';
   },
 
-  // ==================== 封面图上传 ====================
-  chooseCoverImage() {
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: (res) => {
-        const tempPath = res.tempFilePaths[0];
-        this.setData({ uploadLoading: true });
-
-        // 生成唯一文件名
-        const ext = tempPath.split('.').pop() || 'jpg';
-        const cloudPath = `covers/guide_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-        wx.cloud.uploadFile({
-          cloudPath,
-          filePath: tempPath
-        }).then(uploadRes => {
-          this.setData({
-            formCover: uploadRes.fileID,
-            formCoverPreview: tempPath,
-            uploadLoading: false
-          });
-          wx.showToast({ title: '封面上传成功', icon: 'success' });
-        }).catch(err => {
-          console.error('[cover upload]', err);
-          wx.showToast({ title: '上传失败', icon: 'none' });
-          this.setData({ uploadLoading: false });
-        });
-      }
-    });
-  },
-
-  removeCover() {
-    this.setData({ formCover: '', formCoverPreview: '' });
-  },
-
-  // ==================== 附件上传 ====================
-  chooseAttachment() {
-    wx.chooseMessageFile({
-      count: 5,
-      type: 'file',
-      success: (res) => {
-        const files = res.tempFiles; // [{path, size, name}]
-        this.setData({ uploadLoading: true });
-
-        const uploadPromises = files.map(file => {
-          const dotIdx = file.name.lastIndexOf('.');
-          const ext = dotIdx > -1 ? file.name.slice(dotIdx) : '';
-          const cloudPath = `attachments/${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
-
-          return wx.cloud.uploadFile({
-            cloudPath,
-            filePath: file.path
-          }).then(uploadRes => ({
-            name: file.name,
-            fileId: uploadRes.fileID,
-            size: file.size
-          }));
-        });
-
-        Promise.all(uploadPromises).then(results => {
-          const current = JSON.parse(this.data.formAttachments || '[]');
-          const updated = [...current, ...results];
-          this.setData({
-            formAttachments: JSON.stringify(updated, null, 2),
-            uploadLoading: false
-          });
-          this.syncFormAttachmentList();
-          wx.showToast({ title: `已上传 ${results.length} 个文件`, icon: 'success' });
-        }).catch(err => {
-          console.error('[attachment upload]', err);
-          wx.showToast({ title: '部分文件上传失败', icon: 'none' });
-          this.setData({ uploadLoading: false });
-        });
-      }
-    });
-  },
-
-  removeAttachment(e) {
-    const idx = e.currentTarget.dataset.index;
-    const current = JSON.parse(this.data.formAttachments || '[]');
-    current.splice(idx, 1);
-    this.setData({ formAttachments: JSON.stringify(current, null, 2) });
-    this.syncFormAttachmentList();
-  },
-
   // ==================== 保存 ====================
   saveDraft() {
     const admin = auth.getUser();
-    const { formTitle, formCover, formContent, formAttachments, formCategoryIdx, formPriceIdx, editingId } = this.data;
+    const { formTitle, formPreparation, formSteps, formCategoryIdx, formPriceIdx, editingId } = this.data;
 
-    if (!formTitle.trim() || !formContent.trim()) {
-      return wx.showToast({ title: '标题和内容为必填', icon: 'none' });
+    if (!formTitle.trim()) {
+      return wx.showToast({ title: '标题为必填', icon: 'none' });
+    }
+    if (!formPreparation.trim()) {
+      return wx.showToast({ title: '前期准备为必填', icon: 'none' });
     }
     if (formCategoryIdx <= 0) {
       return wx.showToast({ title: '请选择关联类目', icon: 'none' });
@@ -230,21 +371,44 @@ Page({
       return wx.showToast({ title: '请选择价格区间', icon: 'none' });
     }
 
-    let attachments = [];
-    try {
-      if (formAttachments.trim()) attachments = JSON.parse(formAttachments);
-    } catch (e) {
-      return wx.showToast({ title: '附件数据格式错误', icon: 'none' });
+    const validSteps = formSteps.filter(s => s.description && s.description.trim());
+    if (validSteps.length === 0) {
+      return wx.showToast({ title: '至少填写一个采购流程步骤', icon: 'none' });
     }
+
+    const processSteps = formSteps.map((step, i) => {
+      const data = {
+        stepOrder: i + 1,
+        description: (step.description || '').trim(),
+        media: (step.media || []).map(m => ({
+          name: m.name,
+          fileId: m.fileId,
+          size: m.size,
+          type: m.type
+        }))
+      };
+
+      if (step.hasGroups) {
+        data.groups = (step.groups || []).map(g => ({
+          title: (g.title || '').trim(),
+          media: (g.media || []).map(m => ({
+            name: m.name,
+            fileId: m.fileId,
+            size: m.size,
+            type: m.type
+          }))
+        }));
+      }
+
+      return data;
+    });
 
     const guideData = {
       title: formTitle.trim(),
-      coverImage: formCover.trim(),
-      content: formContent,
-      // 因为有 "请选择" 占位在索引0，所以实际数据索引要 -1
+      preparation: formPreparation.trim(),
+      processSteps,
       categoryId: this.data.categories[formCategoryIdx - 1]._id,
       priceRangeId: this.data.priceRanges[formPriceIdx - 1]._id,
-      attachments,
       createdBy: admin ? admin.userId : '',
       status: 'draft'
     };
@@ -269,20 +433,40 @@ Page({
     wx.showLoading({ title: '加载中...' });
     cloud.getGuideDetail(id).then(guide => {
       wx.hideLoading();
-      // 因为有 "请选择" 占位在索引0，所以实际数据索引 +1
       const catIdx = this.data.categories.findIndex(c => c._id === guide.categoryId) + 1;
       const priceIdx = this.data.priceRanges.findIndex(p => p._id === guide.priceRangeId) + 1;
+
+      const steps = (guide.processSteps || []).map(step => {
+        const hasGroups = !!(step.groups && step.groups.length > 0);
+        return {
+          description: step.description || '',
+          media: hasGroups ? [] : (step.media || []).map(m => ({
+            name: m.name, fileId: m.fileId, size: m.size, type: m.type
+          })),
+          _mediaDisplay: hasGroups ? [] : (step.media || []).map(m => ({
+            name: m.name, fileId: m.fileId, size: m.size, type: m.type,
+            icon: this.getFileIcon(m.name), sizeDisplay: this.formatSize(m.size)
+          })),
+          hasGroups,
+          groups: hasGroups ? (step.groups || []).map(g => ({
+            title: g.title || '',
+            media: (g.media || []).map(m => ({
+              name: m.name, fileId: m.fileId, size: m.size, type: m.type
+            })),
+            _mediaDisplay: (g.media || []).map(m => ({
+              name: m.name, fileId: m.fileId, size: m.size, type: m.type,
+              icon: this.getFileIcon(m.name), sizeDisplay: this.formatSize(m.size)
+            }))
+          })) : []
+        };
+      });
+
       this.setData({
         showModal: true,
         editingId: id,
         formTitle: guide.title,
-        formCover: guide.coverImage || '',
-        formCoverPreview: '',
-        formContent: guide.content,
-        formAttachments: JSON.stringify(guide.attachments || [], null, 2),
-        formAttachmentList: (guide.attachments || []).map(a => ({
-          ...a, icon: this.getFileIcon(a.name), sizeDisplay: this.formatSize(a.size)
-        })),
+        formPreparation: guide.preparation || '',
+        formSteps: steps.length > 0 ? steps : [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
         formCategoryIdx: catIdx > 0 ? catIdx : 0,
         formPriceIdx: priceIdx > 0 ? priceIdx : 0
       });
@@ -323,6 +507,10 @@ Page({
     });
   },
 
-  // 阻止弹窗关闭（点击弹窗内部不关闭）
+  previewGuide(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({ url: `/pages/guide-detail/guide-detail?id=${id}` });
+  },
+
   noop() {}
 });

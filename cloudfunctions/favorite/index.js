@@ -91,7 +91,6 @@ async function listFavorites(openId, { categoryId } = {}) {
         guides.push({
           _id: guideRes.data._id,
           title: guideRes.data.title,
-          coverImage: guideRes.data.coverImage || '',
           categoryId: guideRes.data.categoryId,
           priceRangeId: guideRes.data.priceRangeId,
           status: guideRes.data.status,

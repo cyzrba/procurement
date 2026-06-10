@@ -51,6 +51,8 @@
   gap: 20rpx;
   font-size: 24rpx;
 }
+.action-edit { font-size: 24rpx; color: #1a7a7a; padding: 8rpx; }
+.action-preview { font-size: 24rpx; color: #2c8c3a; padding: 8rpx; }
 .action-pub { color: #1a7a7a; padding: 8rpx; }
 .action-warn { color: #c17a3a; padding: 8rpx; }
 
@@ -59,128 +61,197 @@
   margin-bottom: 24rpx;
 }
 
-.form-label {
-  font-size: 24rpx;
-  color: #8a7e72;
-  margin-bottom: 12rpx;
+/* ===== 分区标题 ===== */
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a3a3a;
+  margin-bottom: 16rpx;
+  padding-left: 4rpx;
 }
 
-/* 上传区域 */
-.upload-area {
+/* ===== 前期准备 ===== */
+.prep-textarea {
+  width: 100%;
+  background: #f5f2ed;
+  border-radius: 14rpx;
+  padding: 28rpx 32rpx;
+  font-size: 28rpx;
+  color: #2d2a24;
+  height: 300rpx;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* ===== 采购流程步骤卡片 ===== */
+.step-card {
+  background: #faf9f6;
+  border: 1rpx solid #e8e2d8;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.step-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
 }
 
-.upload-btn {
+.step-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.step-badge {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #1a7a7a;
+  background: #e0ecec;
+  border-radius: 8rpx;
+  padding: 6rpx 20rpx;
+}
+
+/* ===== 分组开关 ===== */
+.group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  background: #f0ece6;
+  font-size: 22rpx;
+}
+
+.group-toggle.on {
+  background: #e0ecec;
+  color: #1a7a7a;
+}
+
+.toggle-switch {
+  font-size: 24rpx;
+}
+
+.toggle-label {
+  font-size: 22rpx;
+  color: #6b5e4a;
+}
+
+.group-toggle.on .toggle-label {
+  color: #1a7a7a;
+  font-weight: 600;
+}
+
+.step-del {
+  font-size: 22rpx;
+  color: #c0392b;
+  padding: 8rpx 16rpx;
+  background: #fde8e8;
+  border-radius: 8rpx;
+}
+
+.step-del:active {
+  background: #f5c6c6;
+}
+
+.step-textarea {
+  width: 100%;
+  background: #fff;
+  border: 1rpx solid #e0d5c8;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  font-size: 26rpx;
+  color: #2d2a24;
+  height: 160rpx;
+  box-sizing: border-box;
+  text-align: left;
+  margin-bottom: 16rpx;
+}
+
+/* ===== 上传按钮 ===== */
+.step-upload-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
-  background: #f5f0eb;
+  background: #f0ece6;
   border: 1rpx dashed #c4b8a8;
   border-radius: 12rpx;
-  padding: 20rpx 32rpx;
-  min-width: 240rpx;
-  cursor: pointer;
-}
-.upload-btn:active {
-  background: #ece3da;
-}
-
-.upload-icon {
-  font-size: 32rpx;
-}
-
-.upload-text {
+  padding: 18rpx 24rpx;
+  margin-bottom: 12rpx;
   font-size: 24rpx;
   color: #6b5e4a;
 }
 
-/* 封面预览 */
-.cover-preview {
-  position: relative;
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-  border: 1rpx solid #e0d5c8;
+.step-upload-btn:active {
+  background: #e3d5c4;
 }
 
-.cover-img {
-  width: 100%;
-  height: 100%;
+.upload-icon {
+  font-size: 28rpx;
 }
 
-.cover-remove {
-  position: absolute;
-  top: -8rpx;
-  right: -8rpx;
-  width: 36rpx;
-  height: 36rpx;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 36rpx;
-  font-size: 22rpx;
+/* ===== 媒体列表 ===== */
+.step-media-list {
+  margin-top: 4rpx;
 }
 
-/* 隐藏的 fileId 输入框（仅用于存值） */
-.hidden-input {
-  display: none;
-}
-
-/* 附件列表 */
-.attach-list {
-  margin-top: 12rpx;
-}
-
-.attach-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f9f6f2;
-  border-radius: 12rpx;
-  padding: 16rpx 20rpx;
-  margin-bottom: 8rpx;
-}
-
-.attach-info {
+.media-item {
   display: flex;
   align-items: center;
   gap: 12rpx;
+  background: #fff;
+  border-radius: 10rpx;
+  padding: 14rpx 16rpx;
+  margin-bottom: 8rpx;
+  border: 1rpx solid #ece7df;
+}
+
+.media-thumb {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+  background: #f0ece6;
+}
+
+.media-icon-video,
+.media-icon-file {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+  background: #f0ece6;
+}
+
+.media-info {
   flex: 1;
   min-width: 0;
 }
 
-.attach-icon {
-  font-size: 32rpx;
-  flex-shrink: 0;
-}
-
-.attach-detail {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.attach-name {
+.media-name {
   font-size: 24rpx;
   color: #2d2a24;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.attach-size {
+.media-size {
   font-size: 20rpx;
   color: #a89a88;
   margin-top: 2rpx;
+  display: block;
 }
 
-.attach-remove {
+.media-remove {
   flex-shrink: 0;
   width: 36rpx;
   height: 36rpx;
@@ -190,13 +261,74 @@
   text-align: center;
   line-height: 36rpx;
   font-size: 22rpx;
-  margin-left: 12rpx;
 }
-.attach-remove:active {
+
+.media-remove:active {
   background: #e3d5c4;
 }
 
-/* 长的多行输入框 */
-.modal-textarea.tall {
-  height: 240rpx;
+/* ===== 分组列表 ===== */
+.group-list {
+  margin-bottom: 12rpx;
+}
+
+.group-card {
+  background: #fff;
+  border: 1rpx solid #e8e2d8;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 12rpx;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.group-title-input {
+  flex: 1;
+  height: 64rpx;
+  background: #f5f2ed;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  font-size: 26rpx;
+  color: #2d2a24;
+  box-sizing: border-box;
+}
+
+.group-del {
+  flex-shrink: 0;
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fde8e8;
+  color: #c0392b;
+  border-radius: 50%;
+  font-size: 22rpx;
+}
+
+.group-del:active {
+  background: #f5c6c6;
+}
+
+/* ===== 新增步骤/子项 ===== */
+.add-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2rpx dashed #1a7a7a;
+  border-radius: 14rpx;
+  padding: 22rpx;
+  font-size: 26rpx;
+  color: #1a7a7a;
+  margin-top: 4rpx;
+}
+
+.add-step-btn:active {
+  background: #e0ecec;
 }

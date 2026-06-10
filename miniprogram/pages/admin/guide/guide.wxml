@@ -19,6 +19,7 @@
         </view>
       </view>
       <view class="guide-actions">
+        <text class="action-preview" bindtap="previewGuide" data-id="{{item._id}}">预览</text>
         <text class="action-edit" bindtap="editGuide" data-id="{{item._id}}">编辑</text>
         <text class="action-{{item.status === 'published' ? 'warn' : 'pub'}}"
               wx:if="{{item.status === 'draft' || item.status === 'unpublished'}}"
@@ -36,66 +37,108 @@
     <view class="modal-title">{{editingId ? '编辑指南' : '新建指南'}}</view>
 
     <view class="modal-body">
-        <!-- 标题 -->
         <input class="modal-input" placeholder="指南标题" model:value="{{formTitle}}" />
 
-        <!-- 类目选择 -->
         <picker class="modal-picker" mode="selector"
                 range="{{categoryOptions}}" value="{{formCategoryIdx}}" bindchange="pickCategory">
           <text>{{formCategoryIdx > 0 ? categoryOptions[formCategoryIdx] : '-- 请选择类目 --'}}</text>
         </picker>
 
-        <!-- 价格区间选择 -->
         <picker class="modal-picker" mode="selector"
                 range="{{priceRangeOptions}}" value="{{formPriceIdx}}" bindchange="pickPriceRange">
           <text>{{formPriceIdx > 0 ? priceRangeOptions[formPriceIdx] : '-- 请选择价格区间 --'}}</text>
         </picker>
 
-        <!-- 封面图 -->
         <view class="form-section">
-          <view class="form-label">封面图</view>
-          <view class="upload-area">
-            <view class="upload-btn" bindtap="chooseCoverImage">
-              <text wx:if="{{!uploadLoading}}" class="upload-icon">📷</text>
-              <text wx:if="{{!uploadLoading}}" class="upload-text">选择封面图</text>
-              <text wx:if="{{uploadLoading}}" class="upload-text">上传中…</text>
-            </view>
-            <view class="cover-preview" wx:if="{{formCoverPreview || formCover}}">
-              <image class="cover-img" src="{{formCoverPreview || formCover}}" mode="aspectFill"
-                     wx:if="{{formCoverPreview || formCover}}" />
-              <text class="cover-remove" bindtap="removeCover">✕</text>
-            </view>
-          </view>
-          <!-- 保留隐藏的 fileId 输入用于编辑回显 -->
-          <input class="modal-input hidden-input" placeholder="封面图 fileId" model:value="{{formCover}}" />
+          <view class="section-title">前期准备</view>
+          <textarea class="prep-textarea" placeholder="请输入前期准备内容..." model:value="{{formPreparation}}" />
         </view>
 
-        <!-- 正文内容 -->
         <view class="form-section">
-          <view class="form-label">正文内容（HTML格式）</view>
-          <textarea class="modal-textarea tall" placeholder="正文内容（HTML格式）" model:value="{{formContent}}" />
-        </view>
+          <view class="section-title">采购流程</view>
 
-        <!-- 附件 -->
-        <view class="form-section">
-          <view class="form-label">附件</view>
-          <view class="upload-btn" bindtap="chooseAttachment">
-            <text class="upload-icon">📎</text>
-            <text class="upload-text">{{uploadLoading ? '上传中…' : '添加附件（PDF/Word/Excel）'}}</text>
-          </view>
+          <view class="step-card" wx:for="{{formSteps}}" wx:for-index="stepIdx" wx:key="*this">
+            <view class="step-header">
+              <text class="step-badge">步骤 {{stepIdx + 1}}</text>
+              <view class="step-header-right">
+                <view class="group-toggle {{item.hasGroups ? 'on' : ''}}" bindtap="toggleGroupMode" data-index="{{stepIdx}}">
+                  <text class="toggle-switch">{{item.hasGroups ? '☑' : '☐'}}</text>
+                  <text class="toggle-label">分组</text>
+                </view>
+                <text class="step-del" wx:if="{{formSteps.length > 1}}" bindtap="removeStep" data-index="{{stepIdx}}">删除</text>
+              </view>
+            </view>
 
-          <!-- 附件列表 -->
-          <view class="attach-list" wx:if="{{formAttachmentList.length > 0}}">
-            <view class="attach-item" wx:for="{{formAttachmentList}}" wx:for-index="idx" wx:key="fileId">
-              <view class="attach-info">
-                <text class="attach-icon">{{item.icon}}</text>
-                <view class="attach-detail">
-                  <text class="attach-name">{{item.name}}</text>
-                  <text class="attach-size">{{item.sizeDisplay}}</text>
+            <textarea class="step-textarea" placeholder="{{item.hasGroups ? '请输入主标题...' : '请输入该步骤内容...'}}"
+              value="{{item.description}}"
+              bindinput="onStepDescInput" data-index="{{stepIdx}}" />
+
+            <!-- 无分组：直接上传 -->
+            <block wx:if="{{!item.hasGroups}}">
+              <view class="step-upload-btn" bindtap="chooseStepMedia" data-index="{{stepIdx}}">
+                <text class="upload-icon">📎</text>
+                <text>上传附件/图片/视频</text>
+              </view>
+
+              <view class="step-media-list" wx:if="{{item._mediaDisplay && item._mediaDisplay.length > 0}}">
+                <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx">
+                  <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
+                  <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
+                  <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>
+                  <view class="media-info">
+                    <text class="media-name">{{m.name}}</text>
+                    <text class="media-size">{{formatSize(m.size)}}</text>
+                  </view>
+                  <text class="media-remove" bindtap="removeStepMedia" data-step="{{stepIdx}}" data-midx="{{midx}}">✕</text>
                 </view>
               </view>
-              <text class="attach-remove" data-index="{{idx}}" bindtap="removeAttachment">✕</text>
-            </view>
+            </block>
+
+            <!-- 有分组：显示子项列表 -->
+            <block wx:if="{{item.hasGroups}}">
+              <view class="group-list">
+                <view class="group-card" wx:for="{{item.groups}}" wx:for-index="groupIdx" wx:key="*this">
+                  <view class="group-header">
+                    <input class="group-title-input" placeholder="子标题"
+                      value="{{item.title}}"
+                      bindinput="onGroupTitleInput"
+                      data-step-idx="{{stepIdx}}"
+                      data-group-idx="{{groupIdx}}" />
+                    <text class="group-del" wx:if="{{item.groups.length > 1}}"
+                      bindtap="removeGroup"
+                      data-step-idx="{{stepIdx}}"
+                      data-group-idx="{{groupIdx}}">✕</text>
+                  </view>
+
+                  <view class="step-upload-btn" bindtap="chooseGroupMedia" data-step-idx="{{stepIdx}}" data-group-idx="{{groupIdx}}">
+                    <text class="upload-icon">📎</text>
+                    <text>上传附件/图片/视频</text>
+                  </view>
+
+                  <view class="step-media-list" wx:if="{{item._mediaDisplay && item._mediaDisplay.length > 0}}">
+                    <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx">
+                      <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
+                      <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
+                      <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>
+                      <view class="media-info">
+                        <text class="media-name">{{m.name}}</text>
+                        <text class="media-size">{{formatSize(m.size)}}</text>
+                      </view>
+                      <text class="media-remove" bindtap="removeGroupMedia"
+                        data-step-idx="{{stepIdx}}" data-group-idx="{{groupIdx}}" data-midx="{{midx}}">✕</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+
+              <view class="add-step-btn" bindtap="addGroup" data-step-idx="{{stepIdx}}">
+                <text>+ 新增子项</text>
+              </view>
+            </block>
+          </view>
+
+          <view class="add-step-btn" bindtap="addStep">
+            <text>+ 新增步骤</text>
           </view>
         </view>
       </view>

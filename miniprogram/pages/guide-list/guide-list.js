@@ -14,7 +14,11 @@ Page({
     try {
       const data = JSON.parse(decodeURIComponent(options.data));
       const pr = data.priceRange || {};
-      const guides = (data.guides || []).map(g => ({ ...g, isFavorited: false }));
+      const guides = (data.guides || []).map(g => ({
+        ...g,
+        isFavorited: false,
+        _publishedText: g.publishedAt ? this._fmtDate(g.publishedAt) : '待发布'
+      }));
       this.setData({
         priceRange: pr,
         guides,
@@ -25,6 +29,21 @@ Page({
       this.loadFavoriteStatus();
     } catch (e) {
       wx.showToast({ title: '数据异常', icon: 'none' });
+    }
+  },
+
+  _fmtDate(str) {
+    try {
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return str;
+      const Y = d.getFullYear();
+      const M = String(d.getMonth() + 1).padStart(2, '0');
+      const D = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${Y}-${M}-${D} ${h}:${m}`;
+    } catch (e) {
+      return str;
     }
   },
 

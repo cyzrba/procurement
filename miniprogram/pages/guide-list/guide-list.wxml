@@ -24,12 +24,9 @@
       wx:key="_id"
     >
       <view class="guide-main" bindtap="goToDetail" data-id="{{item._id}}">
-        <view class="guide-cover" wx:if="{{item.coverImage}}">
-          <image class="guide-cover-img" src="{{item.coverImage}}" mode="aspectFill" />
-        </view>
         <view class="guide-info">
           <text class="guide-title">{{item.title}}</text>
-          <text class="guide-date">发布: {{item.publishedAt || '待发布'}}</text>
+          <text class="guide-date">发布: {{item._publishedText}}</text>
           <view class="guide-tags">
             <text class="tag tag-price">{{priceRange.label}}</text>
           </view>

@@ -31,9 +31,27 @@ Page({
         const db = b.favoritedAt ? new Date(b.favoritedAt).getTime() : 0;
         return db - da;
       });
+      list.forEach(g => {
+        g._publishedText = g.publishedAt ? this._fmtDate(g.publishedAt) : '待发布';
+      });
       this.setData({ guides: list });
       this.applyFilter();
     }).catch(() => {});
+  },
+
+  _fmtDate(str) {
+    try {
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return str;
+      const Y = d.getFullYear();
+      const M = String(d.getMonth() + 1).padStart(2, '0');
+      const D = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${Y}-${M}-${D} ${h}:${m}`;
+    } catch (e) {
+      return str;
+    }
   },
 
   applyFilter() {
