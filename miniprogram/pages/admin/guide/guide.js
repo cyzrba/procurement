@@ -7,7 +7,7 @@ const auth = require('../../../utils/auth');
 Page({
   data: {
     list: [],
-    statusOptions: ['全部', '草稿 draft', '已发布 published', '已下架 unpublished'],
+    statusOptions: ['全部状态', '草稿', '已发布', '已下架'],
     statusIdx: 0,
     statusMap: { draft: '草稿', published: '已发布', unpublished: '已下架' },
     showModal: false,
@@ -19,8 +19,12 @@ Page({
     formCategoryIdx: 0,
     formPriceIdx: 0,
     formTitle: '',
-    formPreparation: '',
-    formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }]
+    formPreparationContent: '',
+    formPreparationMedia: [],
+    _preparationMediaDisplay: [],
+    formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
+    filterCategoryIdx: 0,
+    filterCategoryOptions: []
   },
 
   onLoad() {
@@ -35,6 +39,12 @@ Page({
     const statusMap = ['', 'draft', 'published', 'unpublished'];
     const status = statusMap[this.data.statusIdx];
     if (status) params.status = status;
+
+    const catIdx = this.data.filterCategoryIdx;
+    if (catIdx > 0) {
+      const cat = this.data.categories[catIdx - 1];
+      if (cat) params.categoryId = cat._id;
+    }
 
     cloud.getGuides(params).then(result => {
       this.setData({ list: result.list || [] });
@@ -53,6 +63,7 @@ Page({
         categoryOptions: ['-- 请选择类目 --', ...(categories || []).map(
           c => `${c.name}${c.description ? ' - ' + c.description : ''}`
         )],
+        filterCategoryOptions: ['全部类目', ...(categories || []).map(c => c.name)],
         priceRanges: priceRanges || [],
         priceRangeOptions: ['-- 请选择价格区间 --', ...(priceRanges || []).map(p => p.label)]
       });
@@ -65,12 +76,18 @@ Page({
     this.setData({ statusIdx: e.detail.value }, () => this.loadList());
   },
 
+  filterByCategory(e) {
+    this.setData({ filterCategoryIdx: parseInt(e.detail.value, 10) }, () => this.loadList());
+  },
+
   showCreate() {
     this.setData({
       showModal: true,
       editingId: null,
       formTitle: '',
-      formPreparation: '',
+      formPreparationContent: '',
+      formPreparationMedia: [],
+      _preparationMediaDisplay: [],
       formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
       formCategoryIdx: 0,
       formPriceIdx: 0
@@ -153,7 +170,7 @@ Page({
   chooseStepMedia(e) {
     const stepIdx = e.currentTarget.dataset.index;
     wx.showActionSheet({
-      itemList: ['附件 (PDF/DOCX)', '图片 (JPG/PNG)', '视频 (MP4)'],
+      itemList: ['附件 (PDF/Word/Excel)', '图片 (JPG/PNG)', '视频 (MP4)'],
       success: (res) => {
         switch (res.tapIndex) {
           case 0: this.pickDocuments(stepIdx, null); break;
@@ -169,7 +186,7 @@ Page({
     const stepIdx = e.currentTarget.dataset.stepIdx;
     const groupIdx = e.currentTarget.dataset.groupIdx;
     wx.showActionSheet({
-      itemList: ['附件 (PDF/DOCX)', '图片 (JPG/PNG)', '视频 (MP4)'],
+      itemList: ['附件 (PDF/Word/Excel)', '图片 (JPG/PNG)', '视频 (MP4)'],
       success: (res) => {
         switch (res.tapIndex) {
           case 0: this.pickDocuments(stepIdx, groupIdx); break;
@@ -187,8 +204,8 @@ Page({
       success: (res) => {
         const files = res.tempFiles.filter(f => {
           const ext = (f.name || '').split('.').pop().toLowerCase();
-          if (!['pdf', 'docx'].includes(ext)) {
-            wx.showToast({ title: `${f.name} 格式不支持，仅支持 PDF、DOCX`, icon: 'none' });
+          if (!['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+            wx.showToast({ title: `${f.name} 格式不支持，仅支持 PDF、Word、Excel 文档`, icon: 'none' });
             return false;
           }
           return true;
@@ -338,6 +355,139 @@ Page({
     this.syncGroupMediaDisplay(stepIdx, groupIdx);
   },
 
+  // ==================== 前期准备媒体上传 ====================
+  choosePreparationMedia() {
+    wx.showActionSheet({
+      itemList: ['附件 (PDF/Word/Excel)', '图片 (JPG/PNG)', '视频 (MP4)'],
+      success: (res) => {
+        switch (res.tapIndex) {
+          case 0: this.pickPreparationDocuments(); break;
+          case 1: this.pickPreparationImages(); break;
+          case 2: this.pickPreparationVideos(); break;
+        }
+      }
+    });
+  },
+
+  pickPreparationDocuments() {
+    wx.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      success: (res) => {
+        const files = res.tempFiles.filter(f => {
+          const ext = (f.name || '').split('.').pop().toLowerCase();
+          if (!['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+            wx.showToast({ title: `${f.name} 格式不支持，仅支持 PDF、Word、Excel 文档`, icon: 'none' });
+            return false;
+          }
+          return true;
+        });
+        if (files.length === 0) return;
+        this.uploadPreparationFiles(files, 'document');
+      }
+    });
+  },
+
+  pickPreparationImages() {
+    wx.chooseImage({
+      count: 9,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const files = res.tempFiles.filter(f => {
+          const path = (f.path || f.tempFilePath || '');
+          const ext = path.split('.').pop().toLowerCase();
+          if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+            wx.showToast({ title: '仅支持 JPG/JPEG/PNG 格式', icon: 'none' });
+            return false;
+          }
+          return true;
+        });
+        if (files.length === 0) return;
+        const items = files.map(f => ({
+          path: f.path || f.tempFilePath,
+          size: f.size || 0,
+          name: (f.path || f.tempFilePath || '').split('/').pop() || `image_${Date.now()}.jpg`
+        }));
+        this.uploadPreparationFiles(items, 'image');
+      }
+    });
+  },
+
+  pickPreparationVideos() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['video'],
+      sourceType: ['album', 'camera'],
+      maxDuration: 600,
+      success: (res) => {
+        const file = res.tempFiles[0];
+        if (!file) return;
+        const path = file.tempFilePath || '';
+        const ext = path.split('.').pop().toLowerCase();
+        if (ext !== 'mp4') {
+          return wx.showToast({ title: '仅支持 MP4 格式', icon: 'none' });
+        }
+        this.uploadPreparationFiles([{
+          path,
+          size: file.size || 0,
+          name: `video_${Date.now()}.mp4`
+        }], 'video');
+      }
+    });
+  },
+
+  uploadPreparationFiles(files, type) {
+    wx.showLoading({ title: '上传中...' });
+    const dirMap = { document: 'documents', image: 'images', video: 'videos' };
+    const dir = dirMap[type] || 'attachments';
+
+    const uploads = files.map(file => {
+      const dotIdx = file.name.lastIndexOf('.');
+      const ext = dotIdx > -1 ? file.name.slice(dotIdx) : '';
+      const cloudPath = `${dir}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
+
+      return wx.cloud.uploadFile({
+        cloudPath,
+        filePath: file.path
+      }).then(uploadRes => ({
+        name: file.name,
+        fileId: uploadRes.fileID,
+        size: file.size || 0,
+        type
+      }));
+    });
+
+    Promise.all(uploads).then(results => {
+      wx.hideLoading();
+      const media = [...(this.data.formPreparationMedia || []), ...results];
+      this.setData({ formPreparationMedia: media });
+      this.syncPreparationMediaDisplay();
+      wx.showToast({ title: `已上传 ${results.length} 个文件`, icon: 'success' });
+    }).catch(err => {
+      wx.hideLoading();
+      console.error('[upload error]', err);
+      wx.showToast({ title: '上传失败', icon: 'none' });
+    });
+  },
+
+  syncPreparationMediaDisplay() {
+    const display = (this.data.formPreparationMedia || []).map(m => ({
+      ...m,
+      icon: this.getFileIcon(m.name),
+      sizeDisplay: this.formatSize(m.size)
+    }));
+    this.setData({ _preparationMediaDisplay: display });
+  },
+
+  removePreparationMedia(e) {
+    const midx = e.currentTarget.dataset.midx;
+    const media = this.data.formPreparationMedia;
+    media.splice(midx, 1);
+    this.setData({ formPreparationMedia: media });
+    this.syncPreparationMediaDisplay();
+  },
+
   // ==================== 工具方法 ====================
   formatSize(bytes) {
     if (!bytes && bytes !== 0) return '';
@@ -356,13 +506,15 @@ Page({
   // ==================== 保存 ====================
   saveDraft() {
     const admin = auth.getUser();
-    const { formTitle, formPreparation, formSteps, formCategoryIdx, formPriceIdx, editingId } = this.data;
+    const { formTitle, formPreparationContent, formPreparationMedia, formSteps, formCategoryIdx, formPriceIdx, editingId } = this.data;
 
     if (!formTitle.trim()) {
       return wx.showToast({ title: '标题为必填', icon: 'none' });
     }
-    if (!formPreparation.trim()) {
-      return wx.showToast({ title: '前期准备为必填', icon: 'none' });
+    const hasPrepText = formPreparationContent.trim().length > 0;
+    const hasPrepMedia = formPreparationMedia && formPreparationMedia.length > 0;
+    if (!hasPrepText && !hasPrepMedia) {
+      return wx.showToast({ title: '前期准备为必填（文字或上传文件至少一项）', icon: 'none' });
     }
     if (formCategoryIdx <= 0) {
       return wx.showToast({ title: '请选择关联类目', icon: 'none' });
@@ -405,7 +557,15 @@ Page({
 
     const guideData = {
       title: formTitle.trim(),
-      preparation: formPreparation.trim(),
+      preparation: {
+        content: formPreparationContent.trim(),
+        media: (formPreparationMedia || []).map(m => ({
+          name: m.name,
+          fileId: m.fileId,
+          size: m.size,
+          type: m.type
+        }))
+      },
       processSteps,
       categoryId: this.data.categories[formCategoryIdx - 1]._id,
       priceRangeId: this.data.priceRanges[formPriceIdx - 1]._id,
@@ -440,10 +600,10 @@ Page({
         const hasGroups = !!(step.groups && step.groups.length > 0);
         return {
           description: step.description || '',
-          media: hasGroups ? [] : (step.media || []).map(m => ({
+          media: (step.media || []).map(m => ({
             name: m.name, fileId: m.fileId, size: m.size, type: m.type
           })),
-          _mediaDisplay: hasGroups ? [] : (step.media || []).map(m => ({
+          _mediaDisplay: (step.media || []).map(m => ({
             name: m.name, fileId: m.fileId, size: m.size, type: m.type,
             icon: this.getFileIcon(m.name), sizeDisplay: this.formatSize(m.size)
           })),
@@ -461,11 +621,30 @@ Page({
         };
       });
 
+      // 兼容旧版（字符串）和新版（{content, media}）preparation
+      let prepContent = '';
+      let prepMedia = [];
+      if (typeof guide.preparation === 'string') {
+        prepContent = guide.preparation || '';
+      } else if (guide.preparation) {
+        prepContent = guide.preparation.content || '';
+        prepMedia = (guide.preparation.media || []).map(m => ({
+          name: m.name, fileId: m.fileId, size: m.size, type: m.type
+        }));
+      }
+      const prepDisplay = prepMedia.map(m => ({
+        ...m,
+        icon: this.getFileIcon(m.name),
+        sizeDisplay: this.formatSize(m.size)
+      }));
+
       this.setData({
         showModal: true,
         editingId: id,
         formTitle: guide.title,
-        formPreparation: guide.preparation || '',
+        formPreparationContent: prepContent,
+        formPreparationMedia: prepMedia,
+        _preparationMediaDisplay: prepDisplay,
         formSteps: steps.length > 0 ? steps : [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
         formCategoryIdx: catIdx > 0 ? catIdx : 0,
         formPriceIdx: priceIdx > 0 ? priceIdx : 0

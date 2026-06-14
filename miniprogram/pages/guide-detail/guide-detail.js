@@ -59,6 +59,9 @@ Page({
         (g.media || []).forEach(m => { if (m.fileId) allFileIds.push(m.fileId); });
       });
     });
+    // 收集前期准备的媒体文件ID
+    const prepMedia = (guide.preparation && guide.preparation.media) || [];
+    prepMedia.forEach(m => { if (m.fileId) allFileIds.push(m.fileId); });
 
     if (allFileIds.length === 0) return Promise.resolve(guide);
 
@@ -68,10 +71,37 @@ Page({
         if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL;
       });
 
+      // 分类前期准备的媒体
+      const prepImageUrls = [];
+      const prepVideoItems = [];
+      const prepDocuments = [];
+      prepMedia.forEach(m => {
+        const url = urlMap[m.fileId] || m.fileId;
+        if (m.type === 'image') prepImageUrls.push(url);
+        else if (m.type === 'video') prepVideoItems.push({ ...m, url });
+        else prepDocuments.push({ ...m, url });
+      });
+      guide._preparationMedia = { _imageUrls: prepImageUrls, _videoItems: prepVideoItems, _documents: prepDocuments };
+      guide._preparationContent = typeof guide.preparation === 'string' ? guide.preparation : (guide.preparation && guide.preparation.content || '');
+
       guide._processSteps = steps.map(step => {
         const hasGroups = !!(step.groups && step.groups.length > 0);
 
         if (hasGroups) {
+          // 处理步骤级媒体（步骤全局附件）
+          const stepMedia = step.media || [];
+          const stepImageUrls = [];
+          const stepVideoItems = [];
+          const stepDocuments = [];
+
+          stepMedia.forEach(m => {
+            const url = urlMap[m.fileId] || m.fileId;
+            if (m.type === 'image') stepImageUrls.push(url);
+            else if (m.type === 'video') stepVideoItems.push({ ...m, url });
+            else stepDocuments.push({ ...m, url });
+          });
+
+          // 处理子项级媒体
           const enrichedGroups = (step.groups || []).map(g => {
             const media = g.media || [];
             const imageUrls = [];
@@ -93,7 +123,14 @@ Page({
             };
           });
 
-          return { ...step, _hasGroups: true, _groups: enrichedGroups };
+          return {
+            ...step,
+            _hasGroups: true,
+            _groups: enrichedGroups,
+            _imageUrls: stepImageUrls,
+            _videoItems: stepVideoItems,
+            _documents: stepDocuments
+          };
         }
 
         const media = step.media || [];

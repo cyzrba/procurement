@@ -15,7 +15,33 @@
     <view class="detail-section">
       <view class="section-label">前期准备</view>
       <view class="prep-content">
-        <text>{{guide.preparation}}</text>
+        <text>{{guide._preparationContent}}</text>
+      </view>
+      <!-- 前期准备：图片 -->
+      <view class="step-media" wx:if="{{guide._preparationMedia._imageUrls.length > 0}}">
+        <view class="image-grid">
+          <image wx:for="{{guide._preparationMedia._imageUrls}}" wx:for-item="url" wx:key="*this"
+            class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
+            bindtap="previewImage" data-urls="{{guide._preparationMedia._imageUrls}}" data-current="{{url}}" />
+        </view>
+      </view>
+      <!-- 前期准备：视频 -->
+      <view class="video-list" wx:if="{{guide._preparationMedia._videoItems.length > 0}}">
+        <view class="video-item" wx:for="{{guide._preparationMedia._videoItems}}" wx:for-item="v" wx:key="fileId">
+          <video class="step-video" src="{{v.url}}" controls show-play-btn object-fit="contain" />
+          <text class="video-save-btn" bindtap="saveVideo" data-url="{{v.url}}">📥 保存视频</text>
+        </view>
+      </view>
+      <!-- 前期准备：文档 -->
+      <view class="doc-list" wx:if="{{guide._preparationMedia._documents.length > 0}}">
+        <view class="doc-item" wx:for="{{guide._preparationMedia._documents}}" wx:for-item="doc" wx:key="fileId"
+          bindtap="openDocMenu" data-fileid="{{doc.fileId}}" data-name="{{doc.name}}">
+          <text class="doc-icon">{{getFileIcon(doc.name)}}</text>
+          <view class="doc-info">
+            <text class="doc-name">{{doc.name}}</text>
+            <text class="doc-size">{{formatSize(doc.size)}}</text>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -37,6 +63,30 @@
 
           <!-- 有分组 -->
           <block wx:if="{{item._hasGroups}}">
+            <!-- 步骤级附件（在子项上方） -->
+            <view class="step-media" wx:if="{{item._imageUrls.length > 0 || item._videoItems.length > 0 || item._documents.length > 0}}">
+              <view class="image-grid" wx:if="{{item._imageUrls.length > 0}}">
+                <image wx:for="{{item._imageUrls}}" wx:for-item="url" wx:key="*this"
+                  class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
+                  bindtap="previewImage" data-urls="{{item._imageUrls}}" data-current="{{url}}" />
+              </view>
+              <view class="video-list" wx:if="{{item._videoItems.length > 0}}">
+                <view class="video-item" wx:for="{{item._videoItems}}" wx:for-item="v" wx:key="fileId">
+                  <video class="step-video" src="{{v.url}}" controls show-play-btn object-fit="contain" />
+                  <text class="video-save-btn" bindtap="saveVideo" data-url="{{v.url}}">📥 保存视频</text>
+                </view>
+              </view>
+              <view class="doc-list" wx:if="{{item._documents.length > 0}}">
+                <view class="doc-item" wx:for="{{item._documents}}" wx:for-item="doc" wx:key="fileId"
+                  bindtap="openDocMenu" data-fileid="{{doc.fileId}}" data-name="{{doc.name}}">
+                  <text class="doc-icon">{{getFileIcon(doc.name)}}</text>
+                  <view class="doc-info">
+                    <text class="doc-name">{{doc.name}}</text>
+                    <text class="doc-size">{{formatSize(doc.size)}}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
             <view class="detail-groups">
               <view class="detail-group" wx:for="{{item._groups}}" wx:for-item="grp" wx:key="*this">
                 <text class="detail-group-title">{{grp.title}}</text>

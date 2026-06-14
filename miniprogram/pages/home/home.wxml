@@ -59,6 +59,10 @@
 
   <!-- 步骤2: 选择预算区间 -->
   <view class="section" wx:elif="{{step === 2}}">
+    <view class="top-bar">
+      <view class="back-link" bindtap="backToStep1">← 重新选择类目</view>
+    </view>
+
     <view class="section-title">
       选择预算区间
       <text class="section-tag">{{selectedCategoryName}}</text>
@@ -76,17 +80,9 @@
         </view>
         <view class="price-range-info">
           <text class="price-range-label">{{item.label}}</text>
-          <text class="price-range-desc">
-            {{item.displayRange}}
-          </text>
         </view>
       </view>
     </view>
 
-    <view class="action-bar">
-      <button class="btn-search" bindtap="handleSearch" disabled="{{!selectedPriceRange}}">查 询</button>
-    </view>
-
-    <view class="back-step" bindtap="backToStep1">← 重新选择类目</view>
   </view>
 </view>

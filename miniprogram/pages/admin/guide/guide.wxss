@@ -3,6 +3,9 @@
 
 .filter-bar {
   padding: 0 32rpx 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
 }
 .filter-picker {
   background: #fff;
@@ -287,15 +290,27 @@
   margin-bottom: 12rpx;
 }
 
-.group-title-input {
+.group-label {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #1a7a7a;
+  background: #e0ecec;
+  border-radius: 6rpx;
+  padding: 4rpx 16rpx;
   flex: 1;
-  height: 64rpx;
+}
+
+.group-textarea {
+  width: 100%;
+  height: 160rpx;
   background: #f5f2ed;
   border-radius: 10rpx;
-  padding: 0 20rpx;
+  padding: 16rpx 20rpx;
   font-size: 26rpx;
   color: #2d2a24;
   box-sizing: border-box;
+  text-align: left;
+  margin-bottom: 12rpx;
 }
 
 .group-del {

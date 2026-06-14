@@ -71,10 +71,11 @@ Page({
     });
   },
 
-  // 选中价格区间
+  // 选中价格区间 → 直接查询
   selectPriceRange(e) {
     const id = e.currentTarget.dataset.id;
     this.setData({ selectedPriceRange: id });
+    this.handleSearch();
   },
 
   backToStep1() {

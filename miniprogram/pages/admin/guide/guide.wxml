@@ -8,6 +8,9 @@
     <picker class="filter-picker" mode="selector" range="{{statusOptions}}" value="{{statusIdx}}" bindchange="filterByStatus">
       <text>{{statusOptions[statusIdx]}}</text>
     </picker>
+    <picker class="filter-picker" mode="selector" range="{{filterCategoryOptions}}" value="{{filterCategoryIdx}}" bindchange="filterByCategory">
+      <text>{{filterCategoryOptions[filterCategoryIdx]}}</text>
+    </picker>
   </view>
 
   <view class="data-list">
@@ -51,7 +54,23 @@
 
         <view class="form-section">
           <view class="section-title">前期准备</view>
-          <textarea class="prep-textarea" placeholder="请输入前期准备内容..." model:value="{{formPreparation}}" />
+          <textarea class="prep-textarea" placeholder="请输入前期准备内容..." model:value="{{formPreparationContent}}" />
+          <view class="step-upload-btn" bindtap="choosePreparationMedia">
+            <text class="upload-icon">📎</text>
+            <text>上传附件/图片/视频</text>
+          </view>
+          <view class="step-media-list" wx:if="{{_preparationMediaDisplay && _preparationMediaDisplay.length > 0}}">
+            <view class="media-item" wx:for="{{_preparationMediaDisplay}}" wx:for-item="m" wx:for-index="midx" wx:key="fileId">
+              <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
+              <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
+              <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>
+              <view class="media-info">
+                <text class="media-name">{{m.name}}</text>
+                <text class="media-size">{{formatSize(m.size)}}</text>
+              </view>
+              <text class="media-remove" bindtap="removePreparationMedia" data-midx="{{midx}}">✕</text>
+            </view>
+          </view>
         </view>
 
         <view class="form-section">
@@ -73,42 +92,41 @@
               value="{{item.description}}"
               bindinput="onStepDescInput" data-index="{{stepIdx}}" />
 
-            <!-- 无分组：直接上传 -->
-            <block wx:if="{{!item.hasGroups}}">
-              <view class="step-upload-btn" bindtap="chooseStepMedia" data-index="{{stepIdx}}">
-                <text class="upload-icon">📎</text>
-                <text>上传附件/图片/视频</text>
-              </view>
+            <!-- 步骤附件（始终显示） -->
+            <view class="step-upload-btn" bindtap="chooseStepMedia" data-index="{{stepIdx}}">
+              <text class="upload-icon">📎</text>
+              <text>上传附件/图片/视频</text>
+            </view>
 
-              <view class="step-media-list" wx:if="{{item._mediaDisplay && item._mediaDisplay.length > 0}}">
-                <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx">
-                  <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
-                  <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
-                  <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>
-                  <view class="media-info">
-                    <text class="media-name">{{m.name}}</text>
-                    <text class="media-size">{{formatSize(m.size)}}</text>
-                  </view>
-                  <text class="media-remove" bindtap="removeStepMedia" data-step="{{stepIdx}}" data-midx="{{midx}}">✕</text>
+            <view class="step-media-list" wx:if="{{item._mediaDisplay && item._mediaDisplay.length > 0}}">
+              <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx" wx:key="fileId">
+                <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
+                <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
+                <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>
+                <view class="media-info">
+                  <text class="media-name">{{m.name}}</text>
+                  <text class="media-size">{{formatSize(m.size)}}</text>
                 </view>
+                <text class="media-remove" bindtap="removeStepMedia" data-step="{{stepIdx}}" data-midx="{{midx}}">✕</text>
               </view>
-            </block>
+            </view>
 
             <!-- 有分组：显示子项列表 -->
             <block wx:if="{{item.hasGroups}}">
               <view class="group-list">
                 <view class="group-card" wx:for="{{item.groups}}" wx:for-index="groupIdx" wx:key="*this">
                   <view class="group-header">
-                    <input class="group-title-input" placeholder="子标题"
-                      value="{{item.title}}"
-                      bindinput="onGroupTitleInput"
-                      data-step-idx="{{stepIdx}}"
-                      data-group-idx="{{groupIdx}}" />
+                    <text class="group-label">子项 {{groupIdx + 1}}</text>
                     <text class="group-del" wx:if="{{item.groups.length > 1}}"
                       bindtap="removeGroup"
                       data-step-idx="{{stepIdx}}"
                       data-group-idx="{{groupIdx}}">✕</text>
                   </view>
+                  <textarea class="group-textarea" placeholder="请输入子项内容..."
+                    value="{{item.title}}"
+                    bindinput="onGroupTitleInput"
+                    data-step-idx="{{stepIdx}}"
+                    data-group-idx="{{groupIdx}}" />
 
                   <view class="step-upload-btn" bindtap="chooseGroupMedia" data-step-idx="{{stepIdx}}" data-group-idx="{{groupIdx}}">
                     <text class="upload-icon">📎</text>
@@ -116,7 +134,7 @@
                   </view>
 
                   <view class="step-media-list" wx:if="{{item._mediaDisplay && item._mediaDisplay.length > 0}}">
-                    <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx">
+                    <view class="media-item" wx:for="{{item._mediaDisplay}}" wx:for-item="m" wx:for-index="midx" wx:key="fileId">
                       <image wx:if="{{m.type === 'image'}}" class="media-thumb" src="{{m.fileId}}" mode="aspectFill" />
                       <text wx:elif="{{m.type === 'video'}}" class="media-icon-video">🎬</text>
                       <text wx:else class="media-icon-file">{{getFileIcon(m.name)}}</text>

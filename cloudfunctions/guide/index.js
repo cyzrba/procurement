@@ -34,9 +34,26 @@ exports.main = async (event, context) => {
 
 async function createGuide(data) {
   const { title, preparation, processSteps, categoryId, priceRangeId } = data;
-  if (!title || !preparation || !categoryId || !priceRangeId) {
+  // 兼容旧版（字符串）和新版（{content, media}）preparation 格式
+  const prepStr = typeof preparation === 'string' ? preparation : (preparation && preparation.content || '');
+  const hasPrepText = prepStr.trim().length > 0;
+  const hasPrepMedia = preparation && Array.isArray(preparation.media) && preparation.media.length > 0;
+  if (!title || (!hasPrepText && !hasPrepMedia) || !categoryId || !priceRangeId) {
     return { code: 1001, message: '参数缺失（标题、前期准备、类目、价格区间为必填）' };
   }
+
+  // 统一存储为对象格式
+  const preparationData = typeof preparation === 'string'
+    ? { content: preparation, media: [] }
+    : {
+        content: (preparation.content || '').trim(),
+        media: (preparation.media || []).map(m => ({
+          name: m.name,
+          fileId: m.fileId,
+          size: m.size,
+          type: m.type
+        }))
+      };
   if (!processSteps || !Array.isArray(processSteps) || processSteps.length === 0) {
     return { code: 1001, message: '参数缺失（至少需要一个采购流程步骤）' };
   }
@@ -44,7 +61,7 @@ async function createGuide(data) {
   const res = await db.collection('guides').add({
     data: {
       title,
-      preparation,
+      preparation: preparationData,
       processSteps: processSteps.map((step, i) => {
         const stepData = {
           stepOrder: i + 1,
@@ -147,21 +164,82 @@ async function deleteGuide({ _id, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
 
   const guide = await db.collection('guides').doc(_id).get();
-  const title = guide.data ? guide.data.title : '';
+  if (!guide.data) return { code: 1004, message: '指南不存在' };
+  const title = guide.data.title || '';
 
+  // 1. 收集所有云存储 fileId
+  const fileIds = collectMediaFileIds(guide.data);
+
+  // 2. 级联删除云存储文件（批量，最多 50 个一批）
+  if (fileIds.length > 0) {
+    try {
+      const BATCH_SIZE = 50;
+      for (let i = 0; i < fileIds.length; i += BATCH_SIZE) {
+        const batch = fileIds.slice(i, i + BATCH_SIZE);
+        await cloud.deleteFile({ fileList: batch });
+      }
+    } catch (err) {
+      console.error('[guide] 删除云存储文件失败:', err);
+    }
+  }
+
+  // 3. 删除指南文档
   await db.collection('guides').doc(_id).remove();
+
+  // 4. 级联删除收藏记录
+  try {
+    await db.collection('favorites').where({ guideId: _id }).remove();
+  } catch (err) {
+    console.error('[guide] 删除收藏记录失败:', err);
+  }
 
   await writeLog({
     module: 'guide',
     action: 'delete',
     targetId: _id,
     targetName: title,
-    detail: `删除采购指南「${title}」`,
+    detail: `删除采购指南「${title}」` + (fileIds.length > 0 ? `（级联清除 ${fileIds.length} 个媒体文件）` : ''),
     operatorId,
     operatorName
   });
 
   return { code: 0, message: '删除成功' };
+}
+
+/**
+ * 从指南数据中递归提取所有媒体 fileId
+ */
+function collectMediaFileIds(guideData) {
+  const ids = [];
+
+  // 前期准备媒体
+  if (guideData.preparation && Array.isArray(guideData.preparation.media)) {
+    guideData.preparation.media.forEach(m => {
+      if (m.fileId) ids.push(m.fileId);
+    });
+  }
+
+  // 采购流程步骤媒体 + 分组子项媒体
+  if (Array.isArray(guideData.processSteps)) {
+    guideData.processSteps.forEach(step => {
+      if (Array.isArray(step.media)) {
+        step.media.forEach(m => {
+          if (m.fileId) ids.push(m.fileId);
+        });
+      }
+      if (Array.isArray(step.groups)) {
+        step.groups.forEach(g => {
+          if (Array.isArray(g.media)) {
+            g.media.forEach(m => {
+              if (m.fileId) ids.push(m.fileId);
+            });
+          }
+        });
+      }
+    });
+  }
+
+  return ids;
 }
 
 async function listGuides({ status, categoryId, page = 1, pageSize = 20 } = {}) {
