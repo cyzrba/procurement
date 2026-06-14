@@ -76,7 +76,7 @@
         <view class="form-section">
           <view class="section-title">采购流程</view>
 
-          <view class="step-card" wx:for="{{formSteps}}" wx:for-index="stepIdx" wx:key="*this">
+          <view class="step-card" wx:for="{{formSteps}}" wx:for-index="stepIdx" wx:key="_key">
             <view class="step-header">
               <text class="step-badge">步骤 {{stepIdx + 1}}</text>
               <view class="step-header-right">
@@ -114,7 +114,7 @@
             <!-- 有分组：显示子项列表 -->
             <block wx:if="{{item.hasGroups}}">
               <view class="group-list">
-                <view class="group-card" wx:for="{{item.groups}}" wx:for-index="groupIdx" wx:key="*this">
+                <view class="group-card" wx:for="{{item.groups}}" wx:for-index="groupIdx" wx:key="_key">
                   <view class="group-header">
                     <text class="group-label">子项 {{groupIdx + 1}}</text>
                     <text class="group-del" wx:if="{{item.groups.length > 1}}"

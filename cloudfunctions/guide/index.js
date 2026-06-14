@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
+const _ = db.command;
 
 exports.main = async (event, context) => {
   const { action, data } = event;
@@ -27,7 +28,12 @@ exports.main = async (event, context) => {
         return { code: -1, message: '未知操作' };
     }
   } catch (err) {
-    console.error('[guide] 错误:', err);
+    console.error('[guide] 错误:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    console.error('[guide] action:', action);
+    console.error('[guide] data keys:', data ? Object.keys(data).join(',') : 'no data');
+    console.error('[guide] data types:', JSON.stringify(data ? Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, v === null ? 'null' : typeof v])
+    ) : {}));
     return { code: 500, message: '服务器内部错误' };
   }
 };
@@ -112,25 +118,141 @@ async function createGuide(data) {
 }
 
 async function updateGuide(data) {
-  if (!data._id) return { code: 1001, message: '参数缺失' };
+  try {
+    if (!data._id) return { code: 1001, message: '参数缺失' };
+  } catch (e) {
+    console.error('[updateGuide:guard]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    return { code: 1001, message: '参数缺失' };
+  }
 
   const updateData = { updatedAt: db.serverDate() };
-  const fields = ['title', 'preparation', 'processSteps', 'categoryId', 'priceRangeId', 'status'];
-  fields.forEach(f => {
-    if (data[f] !== undefined) updateData[f] = data[f];
-  });
 
-  await db.collection('guides').doc(data._id).update({ data: updateData });
+  // 直接赋值的标量字段
+  try {
+    const fields = ['title', 'categoryId', 'priceRangeId', 'status'];
+    fields.forEach(f => {
+      if (data[f] !== undefined) updateData[f] = data[f];
+    });
+  } catch (e) {
+    console.error('[updateGuide:scalar]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    throw e;
+  }
 
-  await writeLog({
-    module: 'guide',
-    action: 'update',
-    targetId: data._id,
-    targetName: data.title || '',
-    detail: `编辑采购指南「${data.title || ''}」`,
-    operatorId: data.operatorId,
-    operatorName: data.operatorName
-  });
+  // 临时变量：存储清洗后的原始数据（供 cleanup 使用）和 _.set 包装（供 updateData 使用）
+  let rawPreparation, rawProcessSteps;
+
+  // 清洗 preparation（兼容旧版字符串、新版对象、null）
+  try {
+    if (data.preparation != null) {  // != null 同时排除 undefined 和 null
+      if (typeof data.preparation === 'string') {
+        rawPreparation = { content: data.preparation, media: [] };
+      } else if (typeof data.preparation === 'object') {
+        const content = typeof data.preparation.content === 'string'
+          ? data.preparation.content.trim()
+          : String(data.preparation.content || '').trim();
+        const media = (data.preparation.media || []).map(m => ({
+          name: m && m.name ? String(m.name) : '',
+          fileId: m && m.fileId ? String(m.fileId) : '',
+          size: m && typeof m.size === 'number' ? m.size : 0,
+          type: m && m.type ? String(m.type) : ''
+        }));
+        rawPreparation = { content, media };
+      } else {
+        // 兜底：未知类型
+        rawPreparation = { content: String(data.preparation), media: [] };
+      }
+      updateData.preparation = _.set(rawPreparation);
+    }
+  } catch (e) {
+    console.error('[updateGuide:preparation]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    throw e;
+  }
+
+  // 清洗 processSteps
+  try {
+    if (data.processSteps != null) {
+      if (!Array.isArray(data.processSteps) || data.processSteps.length === 0) {
+        return { code: 1001, message: '参数缺失（至少需要一个采购流程步骤）' };
+      }
+      rawProcessSteps = data.processSteps.map((step, i) => {
+        const stepData = {
+          stepOrder: i + 1,
+          description: step && typeof step.description === 'string'
+            ? step.description.trim()
+            : String(step && step.description || '').trim(),
+          media: (step && step.media || []).map(m => ({
+            name: m && m.name ? String(m.name) : '',
+            fileId: m && m.fileId ? String(m.fileId) : '',
+            size: m && typeof m.size === 'number' ? m.size : 0,
+            type: m && m.type ? String(m.type) : ''
+          }))
+        };
+        if (step && step.groups && step.groups.length > 0) {
+          stepData.groups = step.groups.map(g => ({
+            title: g && typeof g.title === 'string'
+              ? g.title.trim()
+              : String(g && g.title || '').trim(),
+            media: (g && g.media || []).map(m => ({
+              name: m && m.name ? String(m.name) : '',
+              fileId: m && m.fileId ? String(m.fileId) : '',
+              size: m && typeof m.size === 'number' ? m.size : 0,
+              type: m && m.type ? String(m.type) : ''
+            }))
+          }));
+        }
+        return stepData;
+      });
+      updateData.processSteps = _.set(rawProcessSteps);
+    }
+  } catch (e) {
+    console.error('[updateGuide:processSteps]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    throw e;
+  }
+
+  // 清理被删除的云存储媒体文件（对比新旧 fileId 差异）
+  try {
+    const oldGuide = await db.collection('guides').doc(data._id).get();
+    if (oldGuide.data) {
+      const oldFileIds = collectMediaFileIds(oldGuide.data);
+      const newFileIds = collectMediaFileIds({
+        preparation: rawPreparation,
+        processSteps: rawProcessSteps
+      });
+      const removedIds = oldFileIds.filter(id => !newFileIds.includes(id));
+      if (removedIds.length > 0) {
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < removedIds.length; i += BATCH_SIZE) {
+          await cloud.deleteFile({ fileList: removedIds.slice(i, i + BATCH_SIZE) });
+        }
+        console.log('[updateGuide] 清理被替换的媒体文件:', removedIds.length, '个');
+      }
+    }
+  } catch (err) {
+    console.error('[updateGuide:cleanup]', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    // 不阻断主流程
+  }
+
+  try {
+    await db.collection('guides').doc(data._id).update({ data: updateData });
+  } catch (e) {
+    console.error('[updateGuide:dbUpdate]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    throw e;
+  }
+
+  try {
+    await writeLog({
+      module: 'guide',
+      action: 'update',
+      targetId: data._id,
+      targetName: data.title || '',
+      detail: `编辑采购指南「${data.title || ''}」`,
+      operatorId: data.operatorId,
+      operatorName: data.operatorName
+    });
+  } catch (e) {
+    console.error('[updateGuide:log]', JSON.stringify(e, Object.getOwnPropertyNames(e)));
+    // 日志失败不阻断
+  }
 
   return { code: 0, message: '更新成功' };
 }

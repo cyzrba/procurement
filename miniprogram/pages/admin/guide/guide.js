@@ -88,7 +88,7 @@ Page({
       formPreparationContent: '',
       formPreparationMedia: [],
       _preparationMediaDisplay: [],
-      formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
+      formSteps: [{ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
       formCategoryIdx: 0,
       formPriceIdx: 0
     });
@@ -107,7 +107,7 @@ Page({
   // ==================== 步骤管理 ====================
   addStep() {
     const steps = this.data.formSteps;
-    steps.push({ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] });
+    steps.push({ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] });
     this.setData({ formSteps: steps });
   },
 
@@ -136,7 +136,7 @@ Page({
     step.hasGroups = !step.hasGroups;
 
     if (step.hasGroups && step.groups.length === 0) {
-      step.groups = [{ title: '', media: [], _mediaDisplay: [] }];
+      step.groups = [{ _key: this._genKey(), title: '', media: [], _mediaDisplay: [] }];
     }
 
     this.setData({ formSteps: steps });
@@ -146,7 +146,7 @@ Page({
   addGroup(e) {
     const stepIdx = e.currentTarget.dataset.stepIdx;
     const steps = this.data.formSteps;
-    steps[stepIdx].groups.push({ title: '', media: [], _mediaDisplay: [] });
+    steps[stepIdx].groups.push({ _key: this._genKey(), title: '', media: [], _mediaDisplay: [] });
     this.setData({ formSteps: steps });
   },
 
@@ -489,6 +489,10 @@ Page({
   },
 
   // ==================== 工具方法 ====================
+  _genKey() {
+    return 'k_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  },
+
   formatSize(bytes) {
     if (!bytes && bytes !== 0) return '';
     if (bytes < 1024) return bytes + 'B';
@@ -555,36 +559,59 @@ Page({
       return data;
     });
 
-    const guideData = {
-      title: formTitle.trim(),
-      preparation: {
-        content: formPreparationContent.trim(),
-        media: (formPreparationMedia || []).map(m => ({
-          name: m.name,
-          fileId: m.fileId,
-          size: m.size,
-          type: m.type
-        }))
-      },
-      processSteps,
-      categoryId: this.data.categories[formCategoryIdx - 1]._id,
-      priceRangeId: this.data.priceRanges[formPriceIdx - 1]._id,
-      createdBy: admin ? admin.userId : '',
-      status: 'draft'
-    };
-
     if (editingId) {
+      const guideData = {
+        title: formTitle.trim(),
+        preparation: {
+          content: formPreparationContent.trim(),
+          media: (formPreparationMedia || []).map(m => ({
+            name: m.name,
+            fileId: m.fileId,
+            size: m.size,
+            type: m.type
+          }))
+        },
+        processSteps,
+        categoryId: this.data.categories[formCategoryIdx - 1]._id,
+        priceRangeId: this.data.priceRanges[formPriceIdx - 1]._id,
+        status: 'draft'
+      };
+
       cloud.updateGuide({ _id: editingId, ...guideData }).then(() => {
         wx.showToast({ title: '已更新' });
         this.closeModal();
         this.loadList();
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[saveDraft] 更新失败:', err);
+        wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+      });
     } else {
+      const guideData = {
+        title: formTitle.trim(),
+        preparation: {
+          content: formPreparationContent.trim(),
+          media: (formPreparationMedia || []).map(m => ({
+            name: m.name,
+            fileId: m.fileId,
+            size: m.size,
+            type: m.type
+          }))
+        },
+        processSteps,
+        categoryId: this.data.categories[formCategoryIdx - 1]._id,
+        priceRangeId: this.data.priceRanges[formPriceIdx - 1]._id,
+        createdBy: admin ? admin.userId : '',
+        status: 'draft'
+      };
+
       cloud.createGuide(guideData).then(() => {
         wx.showToast({ title: '草稿已保存' });
         this.closeModal();
         this.loadList();
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[saveDraft] 创建失败:', err);
+        wx.showToast({ title: (err && err.message) || '创建失败', icon: 'none' });
+      });
     }
   },
 
@@ -599,6 +626,7 @@ Page({
       const steps = (guide.processSteps || []).map(step => {
         const hasGroups = !!(step.groups && step.groups.length > 0);
         return {
+          _key: this._genKey(),
           description: step.description || '',
           media: (step.media || []).map(m => ({
             name: m.name, fileId: m.fileId, size: m.size, type: m.type
@@ -609,6 +637,7 @@ Page({
           })),
           hasGroups,
           groups: hasGroups ? (step.groups || []).map(g => ({
+            _key: this._genKey(),
             title: g.title || '',
             media: (g.media || []).map(m => ({
               name: m.name, fileId: m.fileId, size: m.size, type: m.type

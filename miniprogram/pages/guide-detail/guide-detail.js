@@ -63,6 +63,22 @@ Page({
     const prepMedia = (guide.preparation && guide.preparation.media) || [];
     prepMedia.forEach(m => { if (m.fileId) allFileIds.push(m.fileId); });
 
+    // 无论是否有媒体，先设置基础富化属性（WXML 依赖 _preparationContent / _preparationMedia / _processSteps）
+    guide._preparationContent = typeof guide.preparation === 'string' ? guide.preparation : (guide.preparation && guide.preparation.content || '');
+    guide._preparationMedia = { _imageUrls: [], _videoItems: [], _documents: [] };
+    guide._processSteps = steps.map(step => {
+      const hasGroups = !!(step.groups && step.groups.length > 0);
+      if (hasGroups) {
+        return {
+          ...step,
+          _hasGroups: true,
+          _groups: (step.groups || []).map(g => ({ ...g, _imageUrls: [], _videoItems: [], _documents: [] })),
+          _imageUrls: [], _videoItems: [], _documents: []
+        };
+      }
+      return { ...step, _hasGroups: false, _imageUrls: [], _videoItems: [], _documents: [] };
+    });
+
     if (allFileIds.length === 0) return Promise.resolve(guide);
 
     return cloud.getTempFileURL(allFileIds).then(fileList => {
@@ -71,7 +87,7 @@ Page({
         if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL;
       });
 
-      // 分类前期准备的媒体
+      // 分类前期准备的媒体（覆盖初始空值）
       const prepImageUrls = [];
       const prepVideoItems = [];
       const prepDocuments = [];
@@ -82,8 +98,8 @@ Page({
         else prepDocuments.push({ ...m, url });
       });
       guide._preparationMedia = { _imageUrls: prepImageUrls, _videoItems: prepVideoItems, _documents: prepDocuments };
-      guide._preparationContent = typeof guide.preparation === 'string' ? guide.preparation : (guide.preparation && guide.preparation.content || '');
 
+      // 重新构建 _processSteps（含媒体 URL，覆盖初始空值）
       guide._processSteps = steps.map(step => {
         const hasGroups = !!(step.groups && step.groups.length > 0);
 

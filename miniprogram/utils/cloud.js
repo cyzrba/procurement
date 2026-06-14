@@ -3,7 +3,7 @@
  */
 const auth = require('./auth');
 
-const call = (name, action, data = {}) => {
+const call = (name, action, data = {}, options = {}) => {
   return new Promise((resolve, reject) => {
     wx.cloud.callFunction({
       name,
@@ -13,11 +13,11 @@ const call = (name, action, data = {}) => {
       if (result.code === 0) {
         resolve(result.data);
       } else {
-        wx.showToast({ title: result.message || '操作失败', icon: 'none' });
+        wx.showToast({ title: result.message || '操作失败', icon: 'none', duration: options.toastDuration || 2000 });
         reject(result);
       }
     }).catch(err => {
-      wx.showToast({ title: '网络错误', icon: 'none' });
+      wx.showToast({ title: '网络错误', icon: 'none', duration: options.toastDuration || 1500 });
       reject(err);
     });
   });
@@ -64,7 +64,7 @@ module.exports = {
   deleteGuide: (_id) => call('guide', 'delete', withAdminCtx({ _id })),
   getGuides: (params) => call('guide', 'list', params),
   getGuideDetail: (guideId) => call('guide', 'detail', { guideId }),
-  matchGuides: (categoryId, priceRangeId) => call('guide', 'match', { categoryId, priceRangeId }),
+  matchGuides: (categoryId, priceRangeId) => call('guide', 'match', { categoryId, priceRangeId }, { toastDuration: 3000 }),
 
   // 用户导入
   importUsers: (fileId) => call('userImport', 'upload', withAdminCtx({ fileId })),
