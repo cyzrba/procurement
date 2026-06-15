@@ -32,6 +32,11 @@
         <text class="action-del" bindtap="deleteGuide" data-id="{{item._id}}">删除</text>
       </view>
     </view>
+
+    <view class="empty-state" wx:if="{{list.length === 0}}">
+      <text class="empty-icon">📄</text>
+      <text class="empty-text">暂无内容</text>
+    </view>
   </view>
 
   <!-- 新建/编辑弹窗 -->
@@ -54,7 +59,7 @@
 
         <view class="form-section">
           <view class="section-title">前期准备</view>
-          <textarea class="prep-textarea" placeholder="请输入前期准备内容..." model:value="{{formPreparationContent}}" />
+          <textarea class="prep-textarea" placeholder="请输入前期准备内容..." model:value="{{formPreparationContent}}" maxlength="500" />
           <view class="step-upload-btn" bindtap="choosePreparationMedia">
             <text class="upload-icon">📎</text>
             <text>上传附件/图片/视频</text>
@@ -90,7 +95,7 @@
 
             <textarea class="step-textarea" placeholder="{{item.hasGroups ? '请输入主标题...' : '请输入该步骤内容...'}}"
               value="{{item.description}}"
-              bindinput="onStepDescInput" data-index="{{stepIdx}}" />
+              bindinput="onStepDescInput" data-index="{{stepIdx}}" maxlength="500" />
 
             <!-- 步骤附件（始终显示） -->
             <view class="step-upload-btn" bindtap="chooseStepMedia" data-index="{{stepIdx}}">
@@ -126,7 +131,7 @@
                     value="{{item.title}}"
                     bindinput="onGroupTitleInput"
                     data-step-idx="{{stepIdx}}"
-                    data-group-idx="{{groupIdx}}" />
+                    data-group-idx="{{groupIdx}}" maxlength="500" />
 
                   <view class="step-upload-btn" bindtap="chooseGroupMedia" data-step-idx="{{stepIdx}}" data-group-idx="{{groupIdx}}">
                     <text class="upload-icon">📎</text>

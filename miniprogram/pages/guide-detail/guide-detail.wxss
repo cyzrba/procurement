@@ -54,6 +54,8 @@
   font-size: 28rpx;
   line-height: 1.8;
   color: #2d2a24;
+  word-break: break-all;
+  overflow: hidden;
 }
 
 /* ===== 采购流程步骤 ===== */
@@ -104,12 +106,15 @@
   flex: 1;
   padding-left: 24rpx;
   padding-top: 8rpx;
+  overflow: hidden;
 }
 .step-desc {
   font-size: 28rpx;
   line-height: 1.7;
   color: #2d2a24;
   display: block;
+  word-break: break-all;
+  overflow: hidden;
 }
 
 /* ===== 分组 ===== */
@@ -137,6 +142,8 @@
   margin-bottom: 16rpx;
   padding-bottom: 12rpx;
   border-bottom: 1rpx solid #e8e2d8;
+  word-break: break-all;
+  overflow: hidden;
 }
 
 /* ===== 步骤媒体 ===== */
