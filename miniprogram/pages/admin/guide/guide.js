@@ -28,8 +28,7 @@ Page({
   },
 
   onLoad() {
-    this.loadList();
-    this.loadOptions();
+    this.loadOptions().then(() => this.loadList());
   },
 
   onShow() { this.loadList(); },
@@ -47,13 +46,19 @@ Page({
     }
 
     cloud.getGuides(params).then(result => {
-      this.setData({ list: result.list || [] });
+      const catMap = {};
+      (this.data.categories || []).forEach(c => { catMap[c._id] = c.name; });
+      const list = (result.list || []).map(item => ({
+        ...item,
+        categoryName: catMap[item.categoryId] || ''
+      }));
+      this.setData({ list });
     }).catch(() => {});
   },
 
   loadOptions() {
     wx.showLoading({ title: '加载中...' });
-    Promise.all([
+    return Promise.all([
       cloud.getCategories().catch(() => []),
       cloud.getPriceRanges().catch(() => [])
     ]).then(([categories, priceRanges]) => {

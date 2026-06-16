@@ -16,7 +16,7 @@
   <view class="data-list">
     <view class="guide-item" wx:for="{{list}}" wx:key="_id">
       <view class="guide-main">
-        <text class="guide-name">{{item.title}}</text>
+        <text class="guide-name">{{item.categoryName ? item.categoryName + ' - ' : ''}}{{item.title}}</text>
         <view class="guide-tags">
           <text class="badge badge-{{item.status}}">{{statusMap[item.status]}}</text>
         </view>
