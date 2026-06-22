@@ -134,3 +134,34 @@
   flex: 1;
   min-height: 88rpx;
 }
+
+/* 姓名 + 角色标签行 */
+.data-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+/* 管理员标签 */
+.role-tag.admin {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  background: #1a7a7a;
+  color: #fff;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+/* 管理员状态标签 */
+.status-tag.admin-tag {
+  background: #e0f2f2;
+  color: #1a7a7a;
+}
+
+/* 修改密码按钮 */
+.action-pwd {
+  font-size: 24rpx;
+  color: #e8a838;
+  padding: 8rpx 12rpx;
+}

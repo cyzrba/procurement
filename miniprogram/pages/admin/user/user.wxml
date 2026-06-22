@@ -46,16 +46,20 @@
   <view class="data-list">
     <view class="data-item" wx:for="{{list}}" wx:key="_id">
       <view class="data-main">
-        <text class="data-name">{{item.name}}</text>
-        <text class="data-desc">{{item.phone}}</text>
+        <view class="data-name-row">
+          <text class="data-name">{{item.name}}</text>
+          <text class="role-tag admin" wx:if="{{item.role === 'admin'}}">管理员</text>
+        </view>
+        <text class="data-desc">{{item.phone || '—'}}</text>
       </view>
       <view class="data-right">
-        <view class="status-tag {{item.status === 'active' ? 'active' : 'disabled'}}">
-          {{item.status === 'active' ? '正常' : '禁用'}}
+        <view class="status-tag {{item.role === 'admin' ? 'admin-tag' : (item.status === 'active' ? 'active' : 'disabled')}}">
+          {{item.role === 'admin' ? '管理员' : (item.status === 'active' ? '正常' : '禁用')}}
         </view>
         <view class="data-actions">
           <text class="action-edit" bindtap="showEdit" data-item="{{item}}">编辑</text>
-          <text class="action-del" bindtap="handleDelete" data-item="{{item}}">删除</text>
+          <text class="action-pwd" wx:if="{{item.role === 'admin'}}" bindtap="showPwdEdit" data-item="{{item}}">修改密码</text>
+          <text class="action-del" wx:if="{{item.role !== 'admin'}}" bindtap="handleDelete" data-item="{{item}}">删除</text>
         </view>
       </view>
     </view>
@@ -98,6 +102,20 @@
     <view class="modal-actions">
       <button class="btn-cancel" bindtap="closeImportModal">取消</button>
       <button class="btn-confirm" bindtap="handleImportSubmit">确认导入</button>
+    </view>
+  </view>
+
+  <!-- 修改密码弹窗 -->
+  <view class="modal-mask" wx:if="{{showPwdModal}}" bindtap="closePwdModal"></view>
+  <view class="modal" wx:if="{{showPwdModal}}">
+    <text class="modal-title">修改密码</text>
+    <view class="modal-body">
+      <input class="modal-input" password placeholder="新密码（至少6位）" value="{{pwdNew}}" bindinput="onPwdNewInput" />
+      <input class="modal-input" password placeholder="确认新密码" value="{{pwdConfirm}}" bindinput="onPwdConfirmInput" />
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closePwdModal">取消</button>
+      <button class="btn-confirm" bindtap="handleChangePassword">确认修改</button>
     </view>
   </view>
 </view>

@@ -29,6 +29,8 @@ exports.main = async (event, context) => {
         return await deleteUser(data);
       case 'createUser':
         return await createUser(data);
+      case 'changePassword':
+        return await changePassword(data);
       default:
         return { code: -1, message: '未知操作' };
     }
@@ -323,6 +325,46 @@ async function createUser({ name, phone, status, operatorId, operatorName }) {
   });
 
   return { code: 0, data: { _id: res._id, name, phone, status: status || 'active' } };
+}
+
+// 管理员修改自己的密码
+async function changePassword(data) {
+  const { newPassword, operatorId, operatorName } = data;
+  if (!newPassword || newPassword.length < 6) {
+    return { code: 1001, message: '密码长度不能小于6位' };
+  }
+  if (!operatorId) {
+    return { code: 1001, message: '参数缺失（operatorId）' };
+  }
+
+  // 查找管理员用户
+  const res = await db.collection('users').doc(operatorId).get();
+  if (!res.data) {
+    return { code: 1002, message: '用户不存在' };
+  }
+  if (res.data.role !== 'admin') {
+    return { code: 1005, message: '仅管理员可修改密码' };
+  }
+
+  // 加密新密码并更新
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(newPassword, salt);
+  await db.collection('users').doc(operatorId).update({
+    data: { password: hash, updatedAt: db.serverDate() }
+  });
+
+  // 审计日志
+  await writeLog({
+    module: 'user',
+    action: 'changePassword',
+    targetId: operatorId,
+    targetName: operatorName || res.data.name,
+    detail: `管理员「${operatorName || res.data.name}」修改了自己的密码`,
+    operatorId,
+    operatorName
+  });
+
+  return { code: 0, data: { message: '密码修改成功' } };
 }
 
 async function writeLog(logData) {

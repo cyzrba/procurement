@@ -18,7 +18,12 @@ Page({
     showImportModal: false,
     importFormName: '',
     importFormPhone: '',
-    importFormStatus: 'active'
+    importFormStatus: 'active',
+    // 密码修改弹窗
+    showPwdModal: false,
+    pwdNew: '',
+    pwdConfirm: '',
+    pwdEditing: null
   },
 
   onLoad() { this.loadUsers(); },
@@ -27,8 +32,21 @@ Page({
 
   loadUsers() {
     const db = wx.cloud.database();
-    db.collection('users').where({ role: 'user' }).get().then(res => {
-      this.setData({ list: res.data, total: res.data.length });
+    const _ = db.command;
+    const currentUser = auth.getUser();
+    db.collection('users').where({
+      role: _.in(['user', 'admin'])
+    }).get().then(res => {
+      const list = res.data;
+      // 排序：当前管理员优先 -> 其他管理员 -> 普通用户
+      list.sort((a, b) => {
+        if (a._id === (currentUser && currentUser.userId)) return -1;
+        if (b._id === (currentUser && currentUser.userId)) return 1;
+        if (a.role === 'admin' && b.role !== 'admin') return -1;
+        if (a.role !== 'admin' && b.role === 'admin') return 1;
+        return 0;
+      });
+      this.setData({ list, total: list.length });
     });
   },
 
@@ -215,6 +233,45 @@ Page({
       wx.showToast({ title: '导入成功' });
       this.closeImportModal();
       this.loadUsers();
+    });
+  },
+
+  // ===== 修改密码 =====
+  showPwdEdit(e) {
+    const item = e.currentTarget.dataset.item;
+    this.setData({
+      showPwdModal: true,
+      pwdEditing: item,
+      pwdNew: '',
+      pwdConfirm: ''
+    });
+  },
+
+  closePwdModal() {
+    this.setData({ showPwdModal: false });
+  },
+
+  onPwdNewInput(e) {
+    this.setData({ pwdNew: e.detail.value });
+  },
+
+  onPwdConfirmInput(e) {
+    this.setData({ pwdConfirm: e.detail.value });
+  },
+
+  handleChangePassword() {
+    const { pwdNew, pwdConfirm } = this.data;
+
+    if (!pwdNew || pwdNew.length < 6) {
+      return wx.showToast({ title: '密码长度不能小于6位', icon: 'none' });
+    }
+    if (pwdNew !== pwdConfirm) {
+      return wx.showToast({ title: '两次输入的密码不一致', icon: 'none' });
+    }
+
+    cloud.changePassword(pwdNew).then(() => {
+      wx.showToast({ title: '密码修改成功' });
+      this.closePwdModal();
     });
   }
 });
