@@ -10,7 +10,6 @@ Page({
     initial: '',
     step: 1,
     categories: [],
-    expandedCategory: null,
     selectedCategory: null,
     selectedCategoryName: '',
     priceRanges: [],
@@ -61,14 +60,6 @@ Page({
       step: 2
     });
     this.loadPriceRanges();
-  },
-
-  // 展开/收起类目简介
-  toggleExpand(e) {
-    const id = e.currentTarget.dataset.id;
-    this.setData({
-      expandedCategory: this.data.expandedCategory === id ? null : id
-    });
   },
 
   // 选中价格区间 → 直接查询

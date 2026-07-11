@@ -28,7 +28,7 @@
     </view>
   </view>
 
-  <!-- 步骤1: 选择类目（可展开显示简介） -->
+  <!-- 步骤1: 选择类目（显示简介） -->
   <view class="section" wx:if="{{step === 1}}">
     <view class="section-title">选择采购类目</view>
     <view class="category-list">
@@ -42,11 +42,8 @@
             <text class="category-icon">{{item.icon || '📦'}}</text>
             <text class="category-name">{{item.name}}</text>
           </view>
-          <view class="category-right">
-            <text class="category-arrow {{expandedCategory === item._id ? 'expanded' : ''}}" catchtap="toggleExpand" data-id="{{item._id}}">▼</text>
-          </view>
         </view>
-        <view class="category-desc-wrap {{expandedCategory === item._id ? 'expanded' : ''}}">
+        <view class="category-desc-wrap">
           <text class="category-desc">{{item.description || '暂无简介'}}</text>
         </view>
       </view>
