@@ -22,13 +22,18 @@ Page({
     formPreparationContent: '',
     formPreparationMedia: [],
     _preparationMediaDisplay: [],
-    formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
+    formSteps: [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [], linkGuideIdx: 0 }],
     filterCategoryIdx: 0,
-    filterCategoryOptions: []
+    filterCategoryOptions: [],
+    publishedGuides: [],
+    linkGuideOptions: ['-- 不链接 --']
   },
 
   onLoad() {
-    this.loadOptions().then(() => this.loadList());
+    this.loadOptions().then(() => {
+      this.loadList();
+      this.loadPublishedGuides();
+    });
   },
 
   onShow() { this.loadList(); },
@@ -77,6 +82,26 @@ Page({
     });
   },
 
+  loadPublishedGuides(categoryId) {
+    if (!categoryId) {
+      this.setData({
+        publishedGuides: [],
+        linkGuideOptions: ['-- 不链接 --']
+      });
+      return Promise.resolve([]);
+    }
+    return cloud.getGuides({ status: 'published', categoryId }).then(result => {
+      const guides = (result.list || []).map(g => ({ _id: g._id, title: g.title }));
+      this.setData({
+        publishedGuides: guides,
+        linkGuideOptions: ['-- 不链接 --', ...guides.map(g => g.title)]
+      });
+      return guides;
+    }).catch(() => {
+      return [];
+    });
+  },
+
   filterByStatus(e) {
     this.setData({ statusIdx: e.detail.value }, () => this.loadList());
   },
@@ -93,26 +118,64 @@ Page({
       formPreparationContent: '',
       formPreparationMedia: [],
       _preparationMediaDisplay: [],
-      formSteps: [{ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
+      formSteps: [{ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [], linkGuideIdx: 0 }],
       formCategoryIdx: 0,
       formPriceIdx: 0
     });
+    this.loadPublishedGuides();
   },
 
   closeModal() { this.setData({ showModal: false }); },
 
   pickCategory(e) {
-    this.setData({ formCategoryIdx: parseInt(e.detail.value, 10) });
+    const idx = parseInt(e.detail.value, 10);
+    this.setData({ formCategoryIdx: idx });
+    if (idx > 0) {
+      const cat = this.data.categories[idx - 1];
+      const steps = this.data.formSteps.map(step => ({
+        ...step,
+        linkGuideIdx: 0,
+        linkGuideId: '',
+        linkGuideTitle: ''
+      }));
+      this.setData({ formSteps: steps });
+      this.loadPublishedGuides(cat ? cat._id : null);
+    } else {
+      const steps = this.data.formSteps.map(step => ({
+        ...step,
+        linkGuideIdx: 0,
+        linkGuideId: '',
+        linkGuideTitle: ''
+      }));
+      this.setData({ formSteps: steps });
+      this.loadPublishedGuides();
+    }
   },
 
   pickPriceRange(e) {
     this.setData({ formPriceIdx: parseInt(e.detail.value, 10) });
   },
 
+  pickLinkGuide(e) {
+    const stepIdx = e.currentTarget.dataset.index;
+    const idx = parseInt(e.detail.value, 10);
+    const steps = this.data.formSteps;
+    const guides = this.data.publishedGuides;
+    steps[stepIdx].linkGuideIdx = idx;
+    if (idx > 0 && guides[idx - 1]) {
+      steps[stepIdx].linkGuideId = guides[idx - 1]._id;
+      steps[stepIdx].linkGuideTitle = guides[idx - 1].title;
+    } else {
+      steps[stepIdx].linkGuideId = '';
+      steps[stepIdx].linkGuideTitle = '';
+    }
+    this.setData({ formSteps: steps });
+  },
+
   // ==================== 步骤管理 ====================
   addStep() {
     const steps = this.data.formSteps;
-    steps.push({ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] });
+    steps.push({ _key: this._genKey(), description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [], linkGuideIdx: 0 });
     this.setData({ formSteps: steps });
   },
 
@@ -561,6 +624,11 @@ Page({
         }));
       }
 
+      if (step.linkGuideId) {
+        data.linkGuideId = step.linkGuideId;
+        data.linkGuideTitle = step.linkGuideTitle || '';
+      }
+
       return data;
     });
 
@@ -624,12 +692,18 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showLoading({ title: '加载中...' });
     cloud.getGuideDetail(id).then(guide => {
-      wx.hideLoading();
-      const catIdx = this.data.categories.findIndex(c => c._id === guide.categoryId) + 1;
-      const priceIdx = this.data.priceRanges.findIndex(p => p._id === guide.priceRangeId) + 1;
+      this.loadPublishedGuides(guide.categoryId).then(() => {
+        wx.hideLoading();
+        const catIdx = this.data.categories.findIndex(c => c._id === guide.categoryId) + 1;
+        const priceIdx = this.data.priceRanges.findIndex(p => p._id === guide.priceRangeId) + 1;
 
       const steps = (guide.processSteps || []).map(step => {
         const hasGroups = !!(step.groups && step.groups.length > 0);
+        const linkGuideId = step.linkGuideId || '';
+        const linkGuideTitle = step.linkGuideTitle || '';
+        const linkGuideIdx = linkGuideId
+          ? this.data.publishedGuides.findIndex(g => g._id === linkGuideId) + 1
+          : 0;
         return {
           _key: this._genKey(),
           description: step.description || '',
@@ -641,6 +715,9 @@ Page({
             icon: this.getFileIcon(m.name), sizeDisplay: this.formatSize(m.size)
           })),
           hasGroups,
+          linkGuideIdx: linkGuideIdx >= 0 ? linkGuideIdx : 0,
+          linkGuideId,
+          linkGuideTitle,
           groups: hasGroups ? (step.groups || []).map(g => ({
             _key: this._genKey(),
             title: g.title || '',
@@ -679,13 +756,16 @@ Page({
         formPreparationContent: prepContent,
         formPreparationMedia: prepMedia,
         _preparationMediaDisplay: prepDisplay,
-        formSteps: steps.length > 0 ? steps : [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [] }],
+        formSteps: steps.length > 0 ? steps : [{ description: '', media: [], _mediaDisplay: [], hasGroups: false, groups: [], linkGuideIdx: 0 }],
         formCategoryIdx: catIdx > 0 ? catIdx : 0,
         formPriceIdx: priceIdx > 0 ? priceIdx : 0
       });
     }).catch(() => {
       wx.hideLoading();
     });
+  }).catch(() => {
+    wx.hideLoading();
+  });
   },
 
   publishGuide(e) {

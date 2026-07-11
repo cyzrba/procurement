@@ -347,3 +347,32 @@
 .add-step-btn:active {
   background: #e0ecec;
 }
+
+/* ===== 链接指南选择器 ===== */
+.link-guide-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e0ecec;
+  border-radius: 12rpx;
+  padding: 18rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.link-guide-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1a7a7a;
+  flex-shrink: 0;
+  margin-right: 16rpx;
+}
+
+.link-guide-value {
+  font-size: 24rpx;
+  color: #2d2a24;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}

@@ -61,6 +61,15 @@
         <view class="step-content">
           <text class="step-desc">{{item.description}}</text>
 
+          <view class="linked-guide-card" wx:if="{{item.linkGuideId}}" bindtap="navigateToLinkedGuide" data-guideid="{{item.linkGuideId}}">
+            <text class="linked-guide-icon">链接</text>
+            <view class="linked-guide-info">
+              <text class="linked-guide-hint">相关指南</text>
+              <text class="linked-guide-name">{{item.linkGuideTitle}}</text>
+            </view>
+            <text class="linked-guide-arrow">→</text>
+          </view>
+
           <!-- 有分组 -->
           <block wx:if="{{item._hasGroups}}">
             <!-- 步骤级附件（在子项上方） -->

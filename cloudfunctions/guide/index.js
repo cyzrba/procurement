@@ -92,6 +92,11 @@ async function createGuide(data) {
           }));
         }
 
+        if (step.linkGuideId) {
+          stepData.linkGuideId = step.linkGuideId;
+          stepData.linkGuideTitle = step.linkGuideTitle || '';
+        }
+
         return stepData;
       }),
       categoryId,
@@ -199,6 +204,10 @@ async function updateGuide(data) {
               type: m && m.type ? String(m.type) : ''
             }))
           }));
+        }
+        if (step && step.linkGuideId) {
+          stepData.linkGuideId = String(step.linkGuideId);
+          stepData.linkGuideTitle = String(step.linkGuideTitle || '');
         }
         return stepData;
       });

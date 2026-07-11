@@ -234,3 +234,57 @@
   margin-top: 4rpx;
   display: block;
 }
+
+/* ===== 链接指南卡片 ===== */
+.linked-guide-card {
+  display: flex;
+  align-items: center;
+  background: #e0ecec;
+  border-left: 6rpx solid #1a7a7a;
+  border-radius: 10rpx;
+  padding: 18rpx 20rpx;
+  margin-top: 20rpx;
+  margin-bottom: 4rpx;
+}
+
+.linked-guide-card:active {
+  background: #c8e0db;
+}
+
+.linked-guide-icon {
+  font-size: 22rpx;
+  color: #1a7a7a;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+
+.linked-guide-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.linked-guide-hint {
+  font-size: 22rpx;
+  color: #6b8a84;
+  display: block;
+  margin-bottom: 2rpx;
+}
+
+.linked-guide-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a3a3a;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linked-guide-arrow {
+  font-size: 28rpx;
+  color: #1a7a7a;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}

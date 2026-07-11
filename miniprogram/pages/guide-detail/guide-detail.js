@@ -73,10 +73,12 @@ Page({
           ...step,
           _hasGroups: true,
           _groups: (step.groups || []).map(g => ({ ...g, _imageUrls: [], _videoItems: [], _documents: [] })),
-          _imageUrls: [], _videoItems: [], _documents: []
+          _imageUrls: [], _videoItems: [], _documents: [],
+          linkGuideId: step.linkGuideId || '',
+          linkGuideTitle: step.linkGuideTitle || ''
         };
       }
-      return { ...step, _hasGroups: false, _imageUrls: [], _videoItems: [], _documents: [] };
+      return { ...step, _hasGroups: false, _imageUrls: [], _videoItems: [], _documents: [], linkGuideId: step.linkGuideId || '', linkGuideTitle: step.linkGuideTitle || '' };
     });
 
     if (allFileIds.length === 0) return Promise.resolve(guide);
@@ -145,7 +147,9 @@ Page({
             _groups: enrichedGroups,
             _imageUrls: stepImageUrls,
             _videoItems: stepVideoItems,
-            _documents: stepDocuments
+            _documents: stepDocuments,
+            linkGuideId: step.linkGuideId || '',
+            linkGuideTitle: step.linkGuideTitle || ''
           };
         }
 
@@ -166,12 +170,21 @@ Page({
           _hasGroups: false,
           _imageUrls: imageUrls,
           _videoItems: videoItems,
-          _documents: documents
+          _documents: documents,
+          linkGuideId: step.linkGuideId || '',
+          linkGuideTitle: step.linkGuideTitle || ''
         };
       });
 
       return guide;
     }).catch(() => Promise.resolve(guide));
+  },
+
+  navigateToLinkedGuide(e) {
+    const guideId = e.currentTarget.dataset.guideid;
+    if (guideId) {
+      wx.navigateTo({ url: `/pages/guide-detail/guide-detail?id=${guideId}` });
+    }
   },
 
   previewImage(e) {

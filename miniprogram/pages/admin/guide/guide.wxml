@@ -97,6 +97,13 @@
               value="{{item.description}}"
               bindinput="onStepDescInput" data-index="{{stepIdx}}" maxlength="500" />
 
+            <view class="link-guide-row">
+              <text class="link-guide-label">链接指南</text>
+              <picker mode="selector" range="{{linkGuideOptions}}" value="{{item.linkGuideIdx}}" bindchange="pickLinkGuide" data-index="{{stepIdx}}">
+                <text class="link-guide-value">{{linkGuideOptions[item.linkGuideIdx] || '-- 选择要跳转的指南 --'}}</text>
+              </picker>
+            </view>
+
             <!-- 步骤附件（始终显示） -->
             <view class="step-upload-btn" bindtap="chooseStepMedia" data-index="{{stepIdx}}">
               <text class="upload-icon">📎</text>
