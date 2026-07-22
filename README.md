@@ -8,8 +8,8 @@
 
 | 项目 | 说明 |
 |------|------|
-| **AppID** | `wx1064c076fd98dffe` |
-| **云环境** | `cloud1-d6g9vtjt1327cb3fc` |
+| **AppID** | `wx9c0f76b862d99ca9` |
+| **云环境** | `cloudbase-d4gbj826bd581e19d` |
 | **基础库** | `3.16.1` |
 | **技术栈** | 微信小程序 + 云开发（云函数 / 云数据库 / 云存储） |
 | **认证方式** | 普通用户：姓名+手机号；管理员：用户名+密码 |
@@ -19,16 +19,17 @@
 
 ```
 用户端：
-  登录(姓名+手机) → 首页选择类目 → 选择预算区间 → 匹配指南列表 → 查看指南详情+下载附件
-  └─ 我的 → 消息中心 / 微信订阅开关 / 退出登录
+  登录(姓名+手机) → 首页选择类目 → 选择预算区间 → 匹配指南列表 → 查看指南详情+收藏/下载附件
+  └─ 我的 → 收藏列表 / 消息中心 / 微信订阅开关 / 退出登录
 
 管理端：
   登录(用户名+密码) → 管理后台仪表盘
   ├─ 类目管理 (增删改查)
   ├─ 价格区间管理 (增删改查)
   ├─ 采购指南管理 (增删改查 + 发布/下架 + 附件上传)
-  ├─ 用户管理 (增删改 + Excel批量导入)
-  └─ 消息推送 (编辑消息 + 订阅推送)
+  ├─ 用户管理 (增删改查 + Excel批量导入)
+  ├─ 消息推送 (编辑消息 + 订阅推送)
+  └─ 操作日志 (按模块筛选 + 批量删除)
 ```
 
 ---
@@ -42,6 +43,8 @@ n:\procurement\
 ├── project.private.config.json  # 开发者私有配置（覆盖项目配置，不提交版本库）
 ├── uploadCloudFunction.sh       # 云函数部署脚本：通过微信 CLI 批量上传云函数
 ├── README.md                    # 本文件：项目说明文档
+├── PRD.md                       # 产品需求文档
+├── .gitignore                   # Git 忽略规则
 │
 ├── cloudfunctions/              # ========== 云函数目录（后端） ==========
 │   │
@@ -55,6 +58,14 @@ n:\procurement\
 │   │
 │   ├── message/                 # 消息推送云函数
 │   │   ├── index.js             #   入口：消息 CRUD + 订阅消息批量推送(sendSubscription)
+│   │   └── package.json         #   依赖：wx-server-sdk
+│   │
+│   ├── favorite/                # 用户收藏云函数
+│   │   ├── index.js             #   入口：收藏 toggle / list / check
+│   │   └── package.json         #   依赖：wx-server-sdk
+│   │
+│   ├── adminLog/                # 管理员操作日志云函数
+│   │   ├── index.js             #   入口：日志 list + deleteBatch
 │   │   └── package.json         #   依赖：wx-server-sdk
 │   │
 │   ├── priceRange/              # 价格区间管理云函数
@@ -135,6 +146,12 @@ n:\procurement\
         │   ├── messages.wxml    #   模板：消息卡片列表
         │   └── messages.wxss    #   样式：消息页专属样式
         │
+        ├── favorites/           # 用户收藏
+        │   ├── favorites.js     #   逻辑：收藏列表展示 + 按类目筛选
+        │   ├── favorites.json   #   配置：导航栏标题"我的收藏"
+        │   ├── favorites.wxml   #   模板：收藏列表卡片
+        │   └── favorites.wxss   #   样式：收藏页专属样式
+        │
         └── admin/               # ---------- 管理后台 ----------
             │
             ├── dashboard/       # 管理后台仪表盘
@@ -167,11 +184,17 @@ n:\procurement\
             │   ├── user.wxml    #   模板：列表 + 编辑弹窗 + 导入按钮 + 导入结果详情
             │   └── user.wxss    #   样式：用户管理页样式
             │
-            └── message/         # 消息推送管理
+            ├── message/         # 消息推送管理
                 ├── message.js   #   逻辑：消息列表 + 新建消息 + 触发订阅推送 + 推送结果反馈
                 ├── message.json #   配置：导航栏标题"消息推送"
                 ├── message.wxml #   模板：消息列表 + 新建弹窗 + 推送确认对话框
                 └── message.wxss #   样式：消息推送页样式
+
+            └── log/             # 操作日志
+                ├── log.js       #   逻辑：日志列表 + 按模块筛选 + 批量删除
+                ├── log.json     #   配置：导航栏标题"操作日志"
+                ├── log.wxml     #   模板：日志列表 + 筛选栏
+                └── log.wxss     #   样式：操作日志页样式
 ```
 
 ---
@@ -183,7 +206,7 @@ n:\procurement\
 │                   miniprogram (前端)                       │
 │  ┌─────────┐  ┌──────────────┐  ┌──────────────────────┐ │
 │  │  pages/  │  │   utils/     │  │  config/ + images/  │ │
-│  │ 12 个页面 │  │ auth.js     │  │ 订阅模板 + 图标资源   │ │
+│  │ 14 个页面 │  │ auth.js     │  │ 订阅模板 + 图标资源   │ │
 │  │          │  │ cloud.js    │  │                      │ │
 │  │          │  │ util.js     │  │                      │ │
 │  └────┬─────┘  └──────┬───────┘  └──────────────────────┘ │
@@ -197,10 +220,14 @@ n:\procurement\
 │  │ category │ │  guide   │ │  message  │ │ priceRange  │  │
 │  │  类目CRUD │ │ 指南CRUD │ │ 消息+推送  │ │  价格区间    │  │
 │  └──────────┘ └──────────┘ └───────────┘ └─────────────┘  │
-│  ┌──────────┐ ┌──────────┐ ┌───────────┐                  │
-│  │   user   │ │userImport│ │  upload   │                  │
-│  │ 用户+认证 │ │ Excel导入 │ │ 文件下载   │                  │
-│  └──────────┘ └──────────┘ └───────────┘                  │
+│  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌─────────────┐  │
+│  │   user   │ │userImport│ │  upload   │ │  favorite   │  │
+│  │ 用户+认证 │ │ Excel导入 │ │ 文件下载   │ │  用户收藏   │  │
+│  └──────────┘ └──────────┘ └───────────┘ └─────────────┘  │
+│  ┌──────────┐                                              │
+│  │ adminLog │                                              │
+│  │ 操作日志  │                                              │
+│  └──────────┘                                              │
 │       │               │               │                    │
 └───────┴───────────────┴───────────────┴────────────────────┘
         │               │               │
@@ -208,7 +235,7 @@ n:\procurement\
 │                    微信云开发基础设施                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │  云数据库     │  │   云存储      │  │  订阅消息服务     │  │
-│  │ 5 个集合     │  │ 封面+附件+Excel│  │  微信模板消息    │  │
+│  │ 7 个集合     │  │ 封面+附件+Excel│  │  微信模板消息    │  │
 │  └──────────────┘  └──────────────┘  └──────────────────┘  │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -222,8 +249,10 @@ n:\procurement\
 | `users` | 用户表 | `name`, `phone`, `password`(管理员), `role`(user/admin), `openId`, `status`, `subscribedTemplates` |
 | `categories` | 采购类目表 | `name`, `description`, `status`(active) |
 | `priceRanges` | 价格区间表 | `label`, `min`, `max`, `enabled` |
-| `guides` | 采购指南表 | `title`, `coverImage`, `content`(HTML), `categoryId`, `priceRangeId`, `attachments`, `status`(draft/published/unpublished) |
+| `guides` | 采购指南表 | `title`, `preparation`(前置准备), `processSteps`[](流程步骤数组), `categoryId`, `priceRangeId`, `status`(draft/published/unpublished) |
 | `messages` | 消息表 | `title`, `content`, `type`, `targetType`, `targetUserIds`, `subscriptionStats` |
+| `favorites` | 用户收藏表 | `userId`(openId), `guideId`, `createdAt` |
+| `admin_logs` | 管理员操作日志表 | `module`, `action`, `targetId`, `targetName`, `detail`, `operatorId`, `operatorName`, `createdAt` |
 
 ---
 
@@ -239,6 +268,8 @@ n:\procurement\
 | `getUserInfo` | 获取用户详情 |
 | `updateUser` | 管理员编辑用户信息 |
 | `deleteUser` | 管理员删除用户 |
+| `createUser` | 管理员新建普通用户 |
+| `changePassword` | 管理员修改自己的密码 |
 
 ### 类目模块 (`category`)
 | action | 说明 |
@@ -261,11 +292,11 @@ n:\procurement\
 | action | 说明 |
 |---------|------|
 | `list` | 分页获取指南列表（支持状态和类目筛选） |
-| `detail` | 获取指南详情 |
-| `create` | 新建指南（草稿状态） |
-| `update` | 编辑指南 |
+| `detail` | 获取指南详情（含 preparation + processSteps 完整结构） |
+| `create` | 新建指南（结构化步骤模型，草稿状态） |
+| `update` | 编辑指南（自动清理被替换的云存储文件） |
 | `publish` / `unpublish` | 发布 / 下架指南 |
-| `delete` | 删除指南 |
+| `delete` | 删除指南（级联删除云存储文件 + 收藏记录） |
 | `match` | 根据类目+预算区间匹配合适的已发布指南 |
 
 ### 消息模块 (`message`)
@@ -273,7 +304,15 @@ n:\procurement\
 |---------|------|
 | `list` | 分页获取消息列表 |
 | `create` | 新建消息 |
+| `send` | 新建消息（别名） |
 | `sendSubscription` | 向订阅用户批量推送微信订阅消息 |
+
+### 收藏模块 (`favorite`)
+| action | 说明 |
+|---------|------|
+| `toggle` | 收藏/取消收藏某指南（根据 openId） |
+| `list` | 获取用户收藏列表（支持 categoryId 筛选） |
+| `check` | 批量检查多个指南的收藏状态 |
 
 ### 导入模块 (`userImport`)
 | action | 说明 |
@@ -284,6 +323,12 @@ n:\procurement\
 | action | 说明 |
 |---------|------|
 | `getTempFileURL` | 获取云存储文件的临时下载链接 |
+
+### 日志模块 (`adminLog`)
+| action | 说明 |
+|---------|------|
+| `list` | 分页查询操作日志（支持按 module 筛选） |
+| `deleteBatch` | 批量删除操作日志 |
 
 ---
 
@@ -307,7 +352,19 @@ n:\procurement\
 
 3. guide-detail/guide-detail.js
    └→ cloud.getGuideDetail(id) → guides 表
+   └→ cloud.toggleFavorite(guideId) → 收藏/取消收藏
    └→ 附件下载 → cloud.getTempFileURL(fileIds) → wx.downloadFile → wx.openDocument
+```
+
+### 用户收藏流程
+```
+1. guide-detail/guide-detail.js
+   └→ cloud.checkFavorites([guideId]) → 检查当前指南收藏状态
+
+2. pages/favorites/favorites.js
+   └→ cloud.getFavorites() → favorite 云函数 → list
+      └→ favorites 表查询 → 关联查询 guides 表 → 返回收藏列表
+   └→ 支持按类目筛选
 ```
 
 ### 管理后台流程
@@ -319,15 +376,25 @@ n:\procurement\
          └→ 跳转 admin/dashboard/dashboard
 
 2. admin/guide/guide.js (创建指南)
-   └→ wx.chooseImage → wx.cloud.uploadFile (封面上传)
+   └→ wx.chooseImage → wx.cloud.uploadFile (媒体文件上传)
    └→ wx.chooseMessageFile → wx.cloud.uploadFile (附件上传)
-   └→ cloud.createGuide({ title, content, categoryId, priceRangeId, attachments, ... })
+   └→ cloud.createGuide({ title, preparation: { content, media }, processSteps: [{ stepOrder, description, media, groups, linkGuideId }], categoryId, priceRangeId })
 
 3. admin/message/message.js (推送消息)
    └→ cloud.createMessage({ title, content, type, targetType })
    └→ cloud.sendSubscriptionMessage(messageId)
       └→ cloudfunctions/message/index.js → sendSubscription()
          └→ 遍历订阅用户 → cloud.openapi.subscribeMessage.send
+
+4. admin/log/log.js (操作日志)
+   └→ cloud.getAdminLogs(module, page, pageSize)
+      └→ cloudfunctions/adminLog/index.js → list()
+         └→ admin_logs 表查询（按 module 筛选，分页）
+   └→ cloud.deleteAdminLogs(ids) → 批量清除日志
+
+5. 操作日志自动记录
+   └→ 所有云函数写操作（category/guide/priceRange/user/userImport）→ writeLog()
+      └→ admin_logs 表写入操作审计记录
 ```
 
 ---
@@ -347,9 +414,9 @@ n:\procurement\
 ## 开发环境
 
 1. 克隆仓库后用**微信开发者工具**打开项目根目录
-2. 确保已开通云开发并配置环境 ID 为 `cloud1-d6g9vtjt1327cb3fc`
+2. 确保已开通云开发并配置环境 ID 为 `cloudbase-d4gbj826bd581e19d`
 3. 在开发者工具中右键云函数目录 → 上传并部署（或执行 `uploadCloudFunction.sh`）
-4. 在云开发控制台创建上述 5 个数据库集合并设置适当权限
+4. 在云开发控制台创建上述 7 个数据库集合并设置适当权限
 5. 编译运行即可预览
 
 ---
