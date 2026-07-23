@@ -7,7 +7,8 @@ Page({
   data: {
     priceRange: {},
     guides: [],
-    priceRangeText: ''
+    priceRangeText: '',
+    categoryName: ''
   },
 
   onLoad(options) {
@@ -24,7 +25,8 @@ Page({
         guides,
         priceRangeText: pr.min !== undefined
           ? `¥${Number(pr.min).toLocaleString()} - ${pr.max === Infinity ? '不限' : '¥' + Number(pr.max).toLocaleString()}`
-          : ''
+          : '',
+        categoryName: data.categoryName || ''
       });
       this.loadFavoriteStatus();
     } catch (e) {

@@ -1,9 +1,14 @@
 <view class="page-guide-list">
   <!-- 价格区间提示 -->
   <view class="price-banner">
-    <view class="price-label">匹配价格区间</view>
-    <text class="price-value">{{priceRange.label || '未匹配'}}</text>
-    <text class="price-range">{{priceRangeText}}</text>
+    <view class="price-banner-left">
+      <view class="price-label">匹配价格区间</view>
+      <text class="price-value">{{priceRange.label || '未匹配'}}</text>
+      <text class="price-range">{{priceRangeText}}</text>
+    </view>
+    <view class="price-banner-right" wx:if="{{categoryName}}">
+      <text class="category-name">{{categoryName}}</text>
+    </view>
   </view>
 
   <!-- 指南列表 -->

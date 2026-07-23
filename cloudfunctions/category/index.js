@@ -24,7 +24,7 @@ exports.main = async (event, context) => {
   }
 };
 
-async function createCategory({ name, description, operatorId, operatorName }) {
+async function createCategory({ name, description, media, operatorId, operatorName }) {
   if (!name) return { code: 1001, message: '类目名称必填' };
 
   // 检查是否已存在
@@ -37,6 +37,7 @@ async function createCategory({ name, description, operatorId, operatorName }) {
     data: {
       name,
       description: description || '',
+      media: media || [],
       status: 'active',
       createdAt: db.serverDate(),
       updatedAt: db.serverDate()
@@ -56,16 +57,34 @@ async function createCategory({ name, description, operatorId, operatorName }) {
   return { code: 0, data: { _id: res._id } };
 }
 
-async function updateCategory({ _id, name, description, operatorId, operatorName }) {
+async function updateCategory({ _id, name, description, media, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
+
+  // 收集旧文件的 fileId 用于清理
+  const oldCat = await db.collection('categories').doc(_id).get();
+  const oldMedia = (oldCat.data && oldCat.data.media) || [];
+  const oldFileIds = new Set(oldMedia.map(m => m.fileId).filter(Boolean));
+  const newMedia = media || [];
+  const newFileIds = new Set(newMedia.map(m => m.fileId).filter(Boolean));
 
   const updateData = { updatedAt: db.serverDate() };
   if (name !== undefined) updateData.name = name;
   if (description !== undefined) updateData.description = description;
+  if (media !== undefined) updateData.media = media;
 
   await db.collection('categories').doc(_id).update({ data: updateData });
 
-  const targetName = name || '';
+  // 清理已删除的云存储文件
+  const orphanedFileIds = [...oldFileIds].filter(id => !newFileIds.has(id));
+  if (orphanedFileIds.length > 0) {
+    try {
+      await cloud.deleteFile({ fileList: orphanedFileIds });
+    } catch (err) {
+      console.error('[category] 清理文件失败:', err);
+    }
+  }
+
+  const targetName = name || (oldCat.data ? oldCat.data.name : '');
   await writeLog({
     module: 'category',
     action: 'update',
@@ -82,13 +101,24 @@ async function updateCategory({ _id, name, description, operatorId, operatorName
 async function deleteCategory({ _id, operatorId, operatorName }) {
   if (!_id) return { code: 1001, message: '参数缺失' };
 
-  // 先获取类目名称
+  // 先获取类目信息
   const cat = await db.collection('categories').doc(_id).get();
 
   // 检查是否有关联指南
   const guides = await db.collection('guides').where({ categoryId: _id }).get();
   if (guides.data.length > 0) {
     return { code: 1007, message: '该类目下有关联指南，无法删除' };
+  }
+
+  // 清理关联的云存储文件
+  const media = (cat.data && cat.data.media) || [];
+  const fileIds = media.map(m => m.fileId).filter(Boolean);
+  if (fileIds.length > 0) {
+    try {
+      await cloud.deleteFile({ fileList: fileIds });
+    } catch (err) {
+      console.error('[category] 删除类目时清理文件失败:', err);
+    }
   }
 
   await db.collection('categories').doc(_id).remove();
@@ -116,8 +146,8 @@ async function listCategories({ status } = {}) {
 
   return {
     code: 0,
-    data: res.data.map(({ _id, name, description, status }) => ({
-      _id, name, description, status
+    data: res.data.map(({ _id, name, description, status, media }) => ({
+      _id, name, description, status, media: media || []
     }))
   };
 }

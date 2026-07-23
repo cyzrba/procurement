@@ -46,7 +46,7 @@ module.exports = {
 
   // 类目
   getCategories: (status) => call('category', 'list', { status }),
-  createCategory: (name, description) => call('category', 'create', withAdminCtx({ name, description })),
+  createCategory: (name, description, media) => call('category', 'create', withAdminCtx({ name, description, media })),
   updateCategory: (_id, data) => call('category', 'update', withAdminCtx({ _id, ...data })),
   deleteCategory: (_id) => call('category', 'delete', withAdminCtx({ _id })),
 
@@ -56,6 +56,7 @@ module.exports = {
   updatePriceRange: (_id, data) => call('priceRange', 'update', withAdminCtx({ _id, ...data })),
   deletePriceRange: (_id) => call('priceRange', 'delete', withAdminCtx({ _id })),
   matchPriceRange: (amount) => call('priceRange', 'match', { amount }),
+  getPriceRangesByCategory: (categoryId, enabled) => call('priceRange', 'listByCategory', { categoryId, enabled }),
 
   // 指南
   createGuide: (data) => call('guide', 'create', withAdminCtx(data)),

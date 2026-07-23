@@ -2,6 +2,7 @@
   "pages": [
     "pages/login/login",
     "pages/home/home",
+    "pages/price-range-select/price-range-select",
     "pages/my/my",
     "pages/favorites/favorites",
     "pages/guide-list/guide-list",

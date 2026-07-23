@@ -21,8 +21,9 @@
       <view class="step-media" wx:if="{{guide._preparationMedia._imageUrls.length > 0}}">
         <view class="image-grid">
           <image wx:for="{{guide._preparationMedia._imageUrls}}" wx:for-item="url" wx:key="*this"
-            class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
-            bindtap="previewImage" data-urls="{{guide._preparationMedia._imageUrls}}" data-current="{{url}}" />
+            class="grid-image" src="{{url}}" mode="aspectFill" 
+            bindtap="previewImage"
+            data-urls="{{guide._preparationMedia._imageUrls}}" data-current="{{url}}" />
         </view>
       </view>
       <!-- 前期准备：视频 -->
@@ -76,8 +77,9 @@
             <view class="step-media" wx:if="{{item._imageUrls.length > 0 || item._videoItems.length > 0 || item._documents.length > 0}}">
               <view class="image-grid" wx:if="{{item._imageUrls.length > 0}}">
                 <image wx:for="{{item._imageUrls}}" wx:for-item="url" wx:key="*this"
-                  class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
-                  bindtap="previewImage" data-urls="{{item._imageUrls}}" data-current="{{url}}" />
+                  class="grid-image" src="{{url}}" mode="aspectFill" 
+                  bindtap="previewImage"
+                  data-urls="{{item._imageUrls}}" data-current="{{url}}" />
               </view>
               <view class="video-list" wx:if="{{item._videoItems.length > 0}}">
                 <view class="video-item" wx:for="{{item._videoItems}}" wx:for-item="v" wx:key="fileId">
@@ -102,8 +104,9 @@
                 <view class="step-media" wx:if="{{grp._imageUrls.length > 0 || grp._videoItems.length > 0 || grp._documents.length > 0}}">
                   <view class="image-grid" wx:if="{{grp._imageUrls.length > 0}}">
                     <image wx:for="{{grp._imageUrls}}" wx:for-item="url" wx:key="*this"
-                      class="grid-image" src="{{url}}" mode="aspectFill" show-menu-by-longpress
-                      bindtap="previewImage" data-urls="{{grp._imageUrls}}" data-current="{{url}}" />
+                      class="grid-image" src="{{url}}" mode="aspectFill" 
+                      bindtap="previewImage"
+                      data-urls="{{grp._imageUrls}}" data-current="{{url}}" />
                   </view>
                    <view class="video-list" wx:if="{{grp._videoItems.length > 0}}">
                     <view class="video-item" wx:for="{{grp._videoItems}}" wx:for-item="v" wx:key="fileId">
@@ -137,7 +140,7 @@
                 class="grid-image"
                 src="{{url}}"
                 mode="aspectFill"
-                show-menu-by-longpress
+                
                 bindtap="previewImage"
                 data-urls="{{item._imageUrls}}"
                 data-current="{{url}}"

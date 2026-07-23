@@ -3,7 +3,7 @@
   <view class="welcome-bar">
     <view class="welcome-left">
       <text class="welcome-greeting">您好, {{userName}}</text>
-      <text class="welcome-hint">{{selectedCategory ? '已选类目，请选择预算区间' : '请选择采购类目'}}</text>
+      <text class="welcome-hint">请选择采购类目</text>
     </view>
     <view class="welcome-avatar">
       <text class="avatar-text">{{initial}}</text>
@@ -12,39 +12,44 @@
 
   <!-- 步骤指示器 -->
   <view class="steps">
-    <view class="step {{step >= 1 ? 'active' : ''}}">
+    <view class="step active">
       <view class="step-circle">1</view>
       <text class="step-label">选择类目</text>
     </view>
-    <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>
-    <view class="step {{step >= 2 ? 'active' : ''}}">
+    <view class="step-line"></view>
+    <view class="step">
       <view class="step-circle">2</view>
       <text class="step-label">选择预算</text>
     </view>
-    <view class="step-line {{step >= 3 ? 'active' : ''}}"></view>
-    <view class="step {{step >= 3 ? 'active' : ''}}">
+    <view class="step-line"></view>
+    <view class="step">
       <view class="step-circle">3</view>
       <text class="step-label">获取指南</text>
     </view>
   </view>
 
-  <!-- 步骤1: 选择类目（显示简介） -->
-  <view class="section" wx:if="{{step === 1}}">
+  <!-- 选择类目 -->
+  <view class="section">
     <view class="section-title">选择采购类目</view>
     <view class="category-list">
-      <view
-        class="category-item {{selectedCategory === item._id ? 'selected' : ''}}"
-        wx:for="{{categories}}"
-        wx:key="_id"
-      >
-        <view class="category-top" bindtap="selectCategory" data-id="{{item._id}}" data-name="{{item.name}}">
+      <view class="category-item" wx:for="{{categories}}" wx:key="_id" bindtap="selectCategory" data-id="{{item._id}}" data-name="{{item.name}}">
+        <view class="category-top">
           <view class="category-left">
-            <text class="category-icon">{{item.icon || '📦'}}</text>
             <text class="category-name">{{item.name}}</text>
           </view>
         </view>
         <view class="category-desc-wrap">
           <text class="category-desc">{{item.description || '暂无简介'}}</text>
+        </view>
+        <view class="category-doc-list" wx:if="{{item._documents && item._documents.length > 0}}">
+          <view class="doc-item" wx:for="{{item._documents}}" wx:for-item="doc" wx:key="fileId"
+            catchtap="openDocMenu" data-fileid="{{doc.fileId}}" data-name="{{doc.name}}">
+            <text class="doc-icon">{{getFileIcon(doc.name)}}</text>
+            <view class="doc-info">
+              <text class="doc-name">{{doc.name}}</text>
+              <text class="doc-size">{{formatSize(doc.size)}}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
@@ -52,34 +57,5 @@
       <text class="empty-icon">📭</text>
       <text class="empty-text">暂无可选类目</text>
     </view>
-  </view>
-
-  <!-- 步骤2: 选择预算区间 -->
-  <view class="section" wx:elif="{{step === 2}}">
-    <view class="top-bar">
-      <view class="back-link" bindtap="backToStep1">← 重新选择类目</view>
-    </view>
-
-    <view class="section-title">
-      选择预算区间
-      <text class="section-tag">{{selectedCategoryName}}</text>
-    </view>
-
-    <view class="price-range-list">
-      <view
-        class="price-range-item {{selectedPriceRange === item._id ? 'selected' : ''}}"
-        wx:for="{{priceRanges}}"
-        wx:key="_id"
-        bindtap="selectPriceRange" data-id="{{item._id}}"
-      >
-        <view class="radio-circle {{selectedPriceRange === item._id ? 'checked' : ''}}">
-          <view class="radio-dot" wx:if="{{selectedPriceRange === item._id}}"></view>
-        </view>
-        <view class="price-range-info">
-          <text class="price-range-label">{{item.label}}</text>
-        </view>
-      </view>
-    </view>
-
   </view>
 </view>

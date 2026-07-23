@@ -1,5 +1,5 @@
 /**
- * 首页（类目选择 + 预算区间选择）
+ * 首页（类目选择）
  */
 const auth = require('../../utils/auth');
 const cloud = require('../../utils/cloud');
@@ -8,12 +8,9 @@ Page({
   data: {
     userName: '',
     initial: '',
-    step: 1,
     categories: [],
     selectedCategory: null,
-    selectedCategoryName: '',
-    priceRanges: [],
-    selectedPriceRange: null
+    selectedCategoryName: ''
   },
 
   onLoad() {
@@ -28,81 +25,142 @@ Page({
     this.loadCategories();
   },
 
-  // 加载类目列表
+  onShow() {
+    this.setData({ selectedCategory: null, selectedCategoryName: '' });
+  },
+
   loadCategories() {
     cloud.getCategories('active').then(list => {
-      const icons = ['📋', '💻', '🏗️', '🚗', '🏥', '📚', '🔧', '🧪', '🖥️', '🛠️'];
-      const enriched = list.map((c, i) => ({
+      const enriched = list.map((c) => ({
         ...c,
-        icon: icons[i % icons.length]
+        media: c.media || []
       }));
+      this.setData({ categories: enriched }, () => {
+        this.enrichAllCategoryMedia();
+      });
+    }).catch(() => {});
+  },
+
+  enrichAllCategoryMedia() {
+    const categories = this.data.categories;
+    const allFileIds = [];
+    categories.forEach(cat => {
+      (cat.media || []).forEach(m => {
+        if (m.fileId) allFileIds.push(m.fileId);
+      });
+    });
+
+    if (allFileIds.length === 0) return;
+
+    cloud.getTempFileURL(allFileIds).then(fileList => {
+      const urlMap = {};
+      (fileList || []).forEach(f => {
+        if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL;
+      });
+
+      const enriched = categories.map(cat => {
+        const media = cat.media || [];
+        if (media.length === 0) {
+          cat._documents = [];
+          return cat;
+        }
+        cat._documents = media.map(m => ({
+          ...m,
+          url: urlMap[m.fileId] || m.fileId
+        }));
+        return cat;
+      });
+
       this.setData({ categories: enriched });
     }).catch(() => {});
   },
 
-  // 加载价格区间
-  loadPriceRanges() {
-    cloud.getPriceRanges(true).then(list => {
-      list.forEach(item => {
-        item.displayRange = `¥${Number(item.min).toLocaleString('zh-CN')} - ${item.max === Infinity ? '不限' : '¥' + Number(item.max).toLocaleString('zh-CN')}`;
-      });
-      this.setData({ priceRanges: list });
-    }).catch(() => {});
-  },
-
-  // 选中类目 → 进入步骤2
   selectCategory(e) {
     const { id, name } = e.currentTarget.dataset;
-    this.setData({
-      selectedCategory: id,
-      selectedCategoryName: name,
-      selectedPriceRange: null,
-      step: 2
+    wx.navigateTo({
+      url: `/pages/price-range-select/price-range-select?categoryId=${id}&categoryName=${encodeURIComponent(name)}`
     });
-    this.loadPriceRanges();
   },
 
-  // 选中价格区间 → 直接查询
-  selectPriceRange(e) {
-    const id = e.currentTarget.dataset.id;
-    this.setData({ selectedPriceRange: id });
-    this.handleSearch();
-  },
+  openDocMenu(e) {
+    const { fileid, name } = e.currentTarget.dataset;
+    const ext = (name || '').split('.').pop().toLowerCase();
 
-  backToStep1() {
-    this.setData({ step: 1, selectedCategory: null, selectedCategoryName: '' });
-  },
+    wx.showLoading({ title: '加载中...' });
+    cloud.getTempFileURL([fileid]).then(fileList => {
+      if (!fileList || !fileList[0] || !fileList[0].tempFileURL) {
+        wx.hideLoading();
+        return;
+      }
+      const tempURL = fileList[0].tempFileURL;
+      wx.downloadFile({
+        url: tempURL,
+        success: (res) => {
+          const savedPath = `${wx.env.USER_DATA_PATH}/doc_${Date.now()}.${ext}`;
+          try {
+            const fs = wx.getFileSystemManager();
+            fs.copyFileSync(res.tempFilePath, savedPath);
+            wx.hideLoading();
 
-  // 查询指南
-  handleSearch() {
-    if (!this.data.selectedPriceRange) {
-      return wx.showToast({ title: '请选择预算区间', icon: 'none' });
-    }
-    if (!this.data.selectedCategory) {
-      return wx.showToast({ title: '请先选择采购类目', icon: 'none' });
-    }
-
-    const categoryId = this.data.selectedCategory;
-    const priceRangeId = this.data.selectedPriceRange;
-
-    console.log('[handleSearch] categoryId:', categoryId, 'priceRangeId:', priceRangeId);
-
-    wx.showLoading({ title: '匹配指南中...' });
-    cloud.matchGuides(categoryId, priceRangeId).then(result => {
-      wx.hideLoading();
-      wx.navigateTo({
-        url: `/pages/guide-list/guide-list?data=${encodeURIComponent(JSON.stringify(result))}`
+            wx.showActionSheet({
+              itemList: ['预览', '复制下载链接', '分享给朋友'],
+              success: (act) => {
+                if (act.tapIndex === 0) {
+                  wx.openDocument({ filePath: savedPath, fileType: ext });
+                } else if (act.tapIndex === 1) {
+                  wx.setClipboardData({
+                    data: tempURL,
+                    success: () => {
+                      wx.showModal({
+                        title: '链接已复制',
+                        content: '下载链接已复制到剪贴板，请打开手机浏览器粘贴并打开',
+                        showCancel: false
+                      });
+                    }
+                  });
+                } else {
+                  wx.shareFileMessage({
+                    filePath: savedPath,
+                    fileName: name,
+                    fail: (err) => {
+                      console.error('[shareFile fail]', JSON.stringify(err));
+                      wx.setClipboardData({
+                        data: tempURL,
+                        success: () => {
+                          wx.showModal({
+                            title: '分享暂不可用',
+                            content: '已复制下载链接，可粘贴到微信聊天发送给朋友',
+                            showCancel: false
+                          });
+                        }
+                      });
+                    }
+                  });
+                }
+              }
+            });
+          } catch (e) {
+            wx.hideLoading();
+            console.error('[copyFile fail]', e);
+            wx.showToast({ title: '文件准备失败', icon: 'none' });
+          }
+        },
+        fail: () => { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); }
       });
-    }).catch(err => {
-      wx.hideLoading();
-      console.error('[handleSearch] matchGuides err:', err);
-      // cloud.js 内部已通过 wx.showToast 显示错误消息
-    });
+    }).catch(() => wx.hideLoading());
   },
 
-  formatNum(n) {
-    if (n === undefined || n === null) return '';
-    if (n === Infinity) return '';
-    return Number(n).toLocaleString('zh-CN');
+  getFileIcon(name) {
+    if (!name) return '📄';
+    const ext = name.split('.').pop().toLowerCase();
+    const map = { pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗', zip: '📦', rar: '📦' };
+    return map[ext] || '📄';
+  },
+
+  formatSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / 1024 / 1024).toFixed(1) + 'MB';
   }
 });

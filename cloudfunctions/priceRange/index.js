@@ -17,6 +17,8 @@ exports.main = async (event, context) => {
         return await listPriceRanges(data);
       case 'match':
         return await matchPriceRange(data);
+      case 'listByCategory':
+        return await listPriceRangesByCategory(data);
       default:
         return { code: -1, message: '未知操作' };
     }
@@ -134,6 +136,32 @@ async function matchPriceRange({ amount }) {
   }
 
   return { code: 0, data: res.data[0] };
+}
+
+async function listPriceRangesByCategory({ categoryId, enabled } = {}) {
+  if (!categoryId) return { code: 1001, message: '参数缺失' };
+
+  const guideRes = await db.collection('guides')
+    .where({ categoryId, status: 'published' })
+    .get();
+
+  const priceRangeIds = [...new Set(guideRes.data.map(g => g.priceRangeId).filter(Boolean))];
+
+  if (priceRangeIds.length === 0) {
+    return { code: 0, data: [] };
+  }
+
+  const where = {
+    _id: db.command.in(priceRangeIds)
+  };
+  if (enabled !== undefined) where.enabled = enabled;
+
+  const res = await db.collection('priceRanges')
+    .where(where)
+    .orderBy('min', 'asc')
+    .get();
+
+  return { code: 0, data: res.data };
 }
 
 async function writeLog(logData) {

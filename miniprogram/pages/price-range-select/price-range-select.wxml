@@ -1,0 +1,52 @@
+<view class="page-price-range">
+  <!-- 步骤指示器 -->
+  <view class="steps">
+    <view class="step active">
+      <view class="step-circle">1</view>
+      <text class="step-label">选择类目</text>
+    </view>
+    <view class="step-line active"></view>
+    <view class="step active">
+      <view class="step-circle">2</view>
+      <text class="step-label">选择预算</text>
+    </view>
+    <view class="step-line"></view>
+    <view class="step">
+      <view class="step-circle">3</view>
+      <text class="step-label">获取指南</text>
+    </view>
+  </view>
+
+  <!-- 预算区间选择 -->
+  <view class="section">
+    <view class="top-bar">
+      <view class="back-link" bindtap="backToCategory">← 重新选择类目</view>
+    </view>
+
+    <view class="section-title">
+      选择预算区间
+      <text class="section-tag">{{categoryName}}</text>
+    </view>
+
+    <view class="price-range-list">
+      <view
+        class="price-range-item {{selectedPriceRange === item._id ? 'selected' : ''}}"
+        wx:for="{{priceRanges}}"
+        wx:key="_id"
+        bindtap="selectPriceRange" data-id="{{item._id}}"
+      >
+        <view class="radio-circle {{selectedPriceRange === item._id ? 'checked' : ''}}">
+          <view class="radio-dot" wx:if="{{selectedPriceRange === item._id}}"></view>
+        </view>
+        <view class="price-range-info">
+          <text class="price-range-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{priceRanges.length === 0}}">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">该分类暂无预算区间</text>
+    </view>
+  </view>
+</view>
