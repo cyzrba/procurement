@@ -2,6 +2,12 @@
 .page-my {
   min-height: 100vh;
   background: #f7f3ee;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-bottom {
+  margin-top: auto;
   padding-bottom: 60rpx;
 }
 
@@ -139,4 +145,15 @@
   font-size: 22rpx;
   color: #c0b8ae;
   margin-top: 32rpx;
+}
+
+.contact-section {
+  margin: 28rpx 32rpx 0;
+  text-align: center;
+}
+.contact-text {
+  display: block;
+  font-size: 22rpx;
+  color: #a09888;
+  line-height: 1.8;
 }

@@ -60,4 +60,14 @@
   </view>
 
   <text class="version">V1.0.0</text>
+
+  <view class="page-bottom">
+
+    <!-- 管理员联系方式 -->
+    <view class="contact-section">
+      <text class="contact-text">学院采购管理员：王苏杭</text>
+      <text class="contact-text">联系方式：0755-86541783；</text>
+      <text class="contact-text">13602594031；wangsuhang@szu.edu.cn</text>
+    </view>
+  </view>
 </view>
