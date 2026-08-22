@@ -1,0 +1,93 @@
+<view class="page-comments">
+  <!-- 顶部说明 -->
+  <view class="comments-header">
+    <text class="header-title">留言板</text>
+  </view>
+
+  <!-- 发布留言 -->
+  <view class="composer-card">
+    <view class="composer-wrap">
+      <view class="composer-placeholder" wx:if="{{!draft}}">
+        <text>1、采购指南中有错误或需更新之处，烦请指出！</text>
+        <text>2、若有更好的意见或建议，烦请留言！</text>
+      </view>
+      <textarea
+        class="composer-textarea"
+        value="{{draft}}"
+        bindinput="onDraftInput"
+        maxlength="-1"
+        auto-height="{{true}}"
+      />
+    </view>
+    <view class="composer-footer">
+      <text class="char-count">{{draft.length}} 字</text>
+      <button class="btn-send {{canSend ? '' : 'btn-send-disabled'}}" bindtap="handleSend" loading="{{sending}}" disabled="{{!canSend}}">发布留言</button>
+    </view>
+  </view>
+
+  <!-- 我的留言列表 -->
+  <view class="section">
+    <view class="section-title">我的留言</view>
+
+    <view class="empty-state" wx:if="{{list.length === 0 && !loading}}">
+      <text class="empty-icon">💬</text>
+      <text class="empty-text" wx:if="{{loadFailed}}">加载失败，请检查网络后重试</text>
+      <text class="empty-text" wx:else>还没有留言，快来说两句吧</text>
+      <text class="retry-btn" wx:if="{{loadFailed}}" bindtap="handleRetry">点击重试</text>
+    </view>
+
+    <view class="comment-list">
+      <view class="comment-item" wx:for="{{list}}" wx:key="_id">
+        <view class="comment-content-wrap" wx:if="{{item._isLong}}" bindtap="openDetail" data-id="{{item._id}}">
+          <text class="comment-content">{{item._preview}}</text>
+          <text class="expand-hint">查看全文</text>
+        </view>
+        <text class="comment-content" wx:else>{{item.content}}</text>
+        <view class="comment-meta">
+          <text class="comment-time">发表于 {{item._timeText}}</text>
+          <view class="comment-actions">
+            <text class="action-edit" bindtap="openEdit" data-id="{{item._id}}">编辑</text>
+            <text class="action-del" bindtap="handleDelete" data-id="{{item._id}}">删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="load-more" wx:if="{{hasMore && list.length > 0}}">
+      <text class="load-more-text" bindtap="loadMore">加载更多</text>
+    </view>
+  </view>
+
+  <!-- 详情弹窗（长留言查看全文） -->
+  <view class="modal-mask" wx:if="{{showDetailModal}}" bindtap="closeDetail"></view>
+  <view class="modal" wx:if="{{showDetailModal}}">
+    <view class="modal-title">留言详情</view>
+    <view class="modal-body">
+      <text class="detail-content">{{detailItem.content}}</text>
+      <text class="detail-time">发表于 {{detailItem._timeText}}</text>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-confirm" bindtap="closeDetail">关闭</button>
+    </view>
+  </view>
+
+  <!-- 编辑弹窗 -->
+  <view class="modal-mask" wx:if="{{showEditModal}}" bindtap="closeEdit"></view>
+  <view class="modal" wx:if="{{showEditModal}}">
+    <view class="modal-title">编辑留言</view>
+    <view class="modal-body">
+      <textarea
+        class="modal-textarea"
+        placeholder="请输入留言内容"
+        value="{{editContent}}"
+        bindinput="onEditInput"
+        maxlength="-1"
+      />
+      <text class="edit-count">{{editContent.length}} 字</text>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeEdit">取消</button>
+      <button class="btn-confirm" bindtap="handleSaveEdit">保存</button>
+    </view>
+  </view>
+</view>

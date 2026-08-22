@@ -13,11 +13,15 @@ const call = (name, action, data = {}, options = {}) => {
       if (result.code === 0) {
         resolve(result.data);
       } else {
-        wx.showToast({ title: result.message || '操作失败', icon: 'none', duration: options.toastDuration || 2000 });
+        if (!options.silent) {
+          wx.showToast({ title: result.message || '操作失败', icon: 'none', duration: options.toastDuration || 2000 });
+        }
         reject(result);
       }
     }).catch(err => {
-      wx.showToast({ title: '网络错误', icon: 'none', duration: options.toastDuration || 1500 });
+      if (!options.silent) {
+        wx.showToast({ title: '网络错误', icon: 'none', duration: options.toastDuration || 1500 });
+      }
       reject(err);
     });
   });
@@ -75,6 +79,14 @@ module.exports = {
   createMessage: (data) => call('message', 'create', data),
   getMessages: (page, pageSize) => call('message', 'list', { page, pageSize }),
   sendSubscriptionMessage: (messageId) => call('message', 'sendSubscription', { messageId }),
+
+  // 留言
+  createComment: (content) => call('comment', 'create', { content }),
+  getComments: (page, pageSize, options) => call('comment', 'list', { page, pageSize }, options),
+  updateComment: (_id, content) => call('comment', 'update', { _id, content }),
+  deleteComment: (_id) => call('comment', 'delete', { _id }),
+  getAllComments: (params, options) => call('comment', 'listAll', params, options),
+  deleteCommentByAdmin: (_id) => call('comment', 'deleteByAdmin', { _id }),
 
   // 收藏
   toggleFavorite: (guideId) => call('favorite', 'toggle', { guideId }),

@@ -16,7 +16,7 @@ exports.main = async (event, context) => {
       case 'userLogin':
         return await userLogin(data, wxContext);
       case 'adminLogin':
-        return await adminLogin(data);
+        return await adminLogin(data, wxContext);
       case 'autoLogin':
         return await autoLogin(data, wxContext);
       case 'updateSubscription':
@@ -86,7 +86,7 @@ async function userLogin({ name, phone }, wxContext) {
 }
 
 // 管理员登录
-async function adminLogin({ username, password }) {
+async function adminLogin({ username, password }, wxContext) {
   if (!username || !password) {
     return { code: 1001, message: '参数缺失' };
   }
@@ -106,9 +106,12 @@ async function adminLogin({ username, password }) {
     return { code: 1005, message: '账号或密码错误' };
   }
 
-  await db.collection('users').doc(admin._id).update({
-    data: { lastLoginAt: db.serverDate() }
-  });
+  const updateData = { lastLoginAt: db.serverDate() };
+  // 绑定 openId，用于云函数服务端校验管理员身份
+  if (wxContext && wxContext.OPENID && admin.openId !== wxContext.OPENID) {
+    updateData.openId = wxContext.OPENID;
+  }
+  await db.collection('users').doc(admin._id).update({ data: updateData });
 
   const token = jwt.sign(
     { userId: admin._id, role: 'admin', name: admin.name },

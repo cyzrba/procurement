@@ -1,0 +1,64 @@
+<view class="admin-page">
+  <!-- 时间筛选 + 计数 -->
+  <view class="admin-toolbar filter-toolbar">
+    <view class="filter-row">
+      <picker mode="date" value="{{filterDate}}" end="{{maxDate}}" bindchange="onFilterDateChange">
+        <view class="filter-btn">
+          <text>{{filterDate || '全部留言'}}</text>
+          <text class="filter-caret">▾</text>
+        </view>
+      </picker>
+      <text class="filter-clear" wx:if="{{filterDate}}" bindtap="clearFilter">清除筛选</text>
+    </view>
+    <text class="list-count">共 {{total}} 条留言</text>
+  </view>
+
+  <!-- 留言列表 -->
+  <view class="data-list">
+    <view class="comment-item" wx:for="{{list}}" wx:key="_id">
+      <view class="comment-head">
+        <text class="comment-user">{{item.userName || '未知用户'}}</text>
+        <text class="comment-phone" wx:if="{{item.userPhone}}">{{item.userPhone}}</text>
+        <text class="comment-time">{{item._timeText}}</text>
+      </view>
+      <view class="comment-content-wrap" wx:if="{{item._isLong}}" bindtap="openDetail" data-id="{{item._id}}">
+        <text class="comment-content">{{item._preview}}</text>
+        <text class="expand-hint">查看全文</text>
+      </view>
+      <text class="comment-content" wx:else>{{item.content}}</text>
+      <view class="comment-foot">
+        <view class="data-actions">
+          <text class="action-del" bindtap="handleDelete" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{list.length === 0 && !loading}}">
+    <text class="empty-icon">💬</text>
+    <text class="empty-text" wx:if="{{loadFailed}}">加载失败，请检查网络后重试</text>
+    <text class="empty-text" wx:else>{{filterDate ? '该日期暂无留言' : '暂无留言'}}</text>
+    <text class="retry-btn" wx:if="{{loadFailed}}" bindtap="handleRetry">点击重试</text>
+  </view>
+
+  <view class="load-more" wx:if="{{hasMore && list.length > 0}}">
+    <text class="load-more-text" bindtap="loadMore">加载更多</text>
+  </view>
+
+  <!-- 详情弹窗（长留言查看全文） -->
+  <view class="modal-mask" wx:if="{{showDetailModal}}" bindtap="closeDetail"></view>
+  <view class="modal" wx:if="{{showDetailModal}}">
+    <view class="modal-title">留言详情</view>
+    <view class="modal-body">
+      <view class="detail-author">
+        <text class="detail-user">{{detailItem.userName || '未知用户'}}</text>
+        <text class="detail-phone" wx:if="{{detailItem.userPhone}}">{{detailItem.userPhone}}</text>
+      </view>
+      <text class="detail-content">{{detailItem.content}}</text>
+      <text class="detail-time">发表于 {{detailItem._timeText}}</text>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-confirm" bindtap="closeDetail">关闭</button>
+    </view>
+  </view>
+</view>

@@ -2,6 +2,7 @@
   "pages": [
     "pages/login/login",
     "pages/home/home",
+    "pages/comments/comments",
     "pages/price-range-select/price-range-select",
     "pages/my/my",
     "pages/favorites/favorites",
@@ -14,6 +15,7 @@
     "pages/admin/guide/guide",
     "pages/admin/user/user",
     "pages/admin/message/message",
+    "pages/admin/comments/comments",
     "pages/admin/log/log"
   ],
   "window": {
@@ -34,6 +36,12 @@
         "text": "采购",
         "iconPath": "images/tab-home.png",
         "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/comments/comments",
+        "text": "留言",
+        "iconPath": "images/tab-comment.png",
+        "selectedIconPath": "images/tab-comment-active.png"
       },
       {
         "pagePath": "pages/my/my",

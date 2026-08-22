@@ -4,6 +4,25 @@
 const auth = require('../../utils/auth');
 const cloud = require('../../utils/cloud');
 
+// 类目 emoji：按名称关键字匹配（前端展示用，无需改数据库）
+const CATEGORY_ICONS = [
+  { keywords: ['货物', '商品', '物资', '设备', '家具', '仪器'], icon: '📦' },
+  { keywords: ['服务', '咨询', '维保', '劳务', '物业', '维修'], icon: '🛠️' },
+  { keywords: ['工程', '建设', '施工', '装修', '修缮', '改造'], icon: '🏗️' },
+  { keywords: ['办公', '耗材', '文具', '纸张', '日常'], icon: '🖊️' },
+  { keywords: ['信息', '软件', '系统', '网络', '电子', '计算机'], icon: '💻' },
+  { keywords: ['实验', '科研', '试剂', '检测'], icon: '🔬' }
+];
+const DEFAULT_CATEGORY_ICON = '📁';
+
+function getCategoryIcon(name) {
+  const n = name || '';
+  for (const item of CATEGORY_ICONS) {
+    if (item.keywords.some(k => n.indexOf(k) > -1)) return item.icon;
+  }
+  return DEFAULT_CATEGORY_ICON;
+}
+
 Page({
   data: {
     userName: '',
@@ -33,7 +52,8 @@ Page({
     cloud.getCategories('active').then(list => {
       const enriched = list.map((c) => ({
         ...c,
-        media: c.media || []
+        media: c.media || [],
+        _icon: getCategoryIcon(c.name)
       }));
       this.setData({ categories: enriched }, () => {
         this.enrichAllCategoryMedia();

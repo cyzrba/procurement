@@ -1,0 +1,165 @@
+/* 留言管理 */
+@import '../category/category.wxss';
+
+.list-count {
+  font-size: 26rpx;
+  color: #8a7e72;
+}
+
+.filter-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  background: #fff;
+  border: 1rpx solid #d9d0c5;
+  border-radius: 12rpx;
+  padding: 14rpx 24rpx;
+  font-size: 26rpx;
+  color: #2d2a24;
+}
+.filter-btn:active {
+  background: #f0ece6;
+}
+.filter-caret {
+  font-size: 22rpx;
+  color: #8a7e72;
+}
+.filter-clear {
+  font-size: 24rpx;
+  color: #1a7a7a;
+  padding: 8rpx 4rpx;
+}
+
+.comment-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+}
+
+.comment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+.comment-user {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2d2a24;
+}
+.comment-phone {
+  font-size: 22rpx;
+  color: #8a7e72;
+}
+.comment-time {
+  font-size: 20rpx;
+  color: #b0a69b;
+  margin-left: auto;
+}
+
+.comment-content {
+  font-size: 28rpx;
+  color: #2d2a24;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: block;
+  margin-top: 12rpx;
+}
+.comment-content-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 12rpx;
+  border-radius: 12rpx;
+}
+.comment-content-wrap:active {
+  opacity: 0.7;
+}
+.comment-content-wrap .comment-content {
+  margin-top: 0;
+}
+.expand-hint {
+  font-size: 22rpx;
+  color: #1a7a7a;
+  align-self: flex-start;
+  padding: 4rpx 16rpx;
+  background: #f0f5f5;
+  border-radius: 20rpx;
+}
+
+.comment-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12rpx;
+}
+
+.action-del {
+  font-size: 24rpx;
+  color: #c0392b;
+  padding: 8rpx 12rpx;
+}
+
+.load-more {
+  text-align: center;
+  padding: 8rpx 0 32rpx;
+}
+.load-more-text {
+  font-size: 24rpx;
+  color: #1a7a7a;
+}
+
+.retry-btn {
+  font-size: 26rpx;
+  color: #1a7a7a;
+  margin-top: 24rpx;
+  padding: 12rpx 40rpx;
+  border: 1rpx solid #b9d2d2;
+  border-radius: 32rpx;
+  background: #fff;
+}
+.retry-btn:active {
+  background: #f0f5f5;
+}
+
+.detail-author {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+.detail-user {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2d2a24;
+}
+.detail-phone {
+  font-size: 24rpx;
+  color: #8a7e72;
+}
+.detail-content {
+  font-size: 30rpx;
+  color: #2d2a24;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: block;
+}
+.detail-time {
+  display: block;
+  margin-top: 28rpx;
+  font-size: 24rpx;
+  color: #b0a69b;
+}

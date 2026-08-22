@@ -35,6 +35,7 @@
       <view class="category-item" wx:for="{{categories}}" wx:key="_id" bindtap="selectCategory" data-id="{{item._id}}" data-name="{{item.name}}">
         <view class="category-top">
           <view class="category-left">
+            <text class="category-icon">{{item._icon}}</text>
             <text class="category-name">{{item.name}}</text>
           </view>
         </view>
