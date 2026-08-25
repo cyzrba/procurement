@@ -40,7 +40,7 @@ module.exports = {
   // 用户
   userLogin: (name, phone) => call('user', 'userLogin', { name, phone }),
   adminLogin: (username, password) => call('user', 'adminLogin', { username, password }),
-  autoLogin: () => call('user', 'autoLogin'),
+  autoLogin: () => call('user', 'autoLogin', {}, { silent: true }),
   updateSubscription: (templates) => call('user', 'updateSubscription', { templates }),
   getUserInfo: (userId) => call('user', 'getUserInfo', { userId }),
   updateUser: (_id, data) => call('user', 'updateUser', withAdminCtx({ _id, ...data })),

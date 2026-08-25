@@ -280,7 +280,8 @@ Page({
         });
         if (files.length === 0) return;
         this.uploadFiles(stepIdx, groupIdx, files, 'document');
-      }
+      },
+      fail: (err) => console.error('[pickDocuments 失败]', err)
     });
   },
 
@@ -306,31 +307,72 @@ Page({
           name: (f.path || f.tempFilePath || '').split('/').pop() || `image_${Date.now()}.jpg`
         }));
         this.uploadFiles(stepIdx, groupIdx, items, 'image');
-      }
+      },
+      fail: (err) => console.error('[pickImages 失败]', err)
     });
   },
 
   pickVideos(stepIdx, groupIdx) {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['video'],
-      sourceType: ['album', 'camera'],
-      maxDuration: 600,
-      success: (res) => {
-        const file = res.tempFiles[0];
-        if (!file) return;
-        const path = file.tempFilePath || '';
-        const ext = path.split('.').pop().toLowerCase();
-        if (ext !== 'mp4') {
-          return wx.showToast({ title: '仅支持 MP4 格式', icon: 'none' });
-        }
-        this.uploadFiles(stepIdx, groupIdx, [{
-          path,
-          size: file.size || 0,
-          name: `video_${Date.now()}.mp4`
-        }], 'video');
-      }
+    this.pickVideoFile((file) => {
+      this.uploadFiles(stepIdx, groupIdx, [file], 'video');
     });
+  },
+
+  // 判断是否为 PC 端微信（windows / mac）
+  isPC() {
+    try {
+      if (wx.getDeviceInfo) {
+        const platform = wx.getDeviceInfo().platform || '';
+        if (platform === 'windows' || platform === 'mac') return true;
+      }
+    } catch (e) {}
+    try {
+      const platform = wx.getSystemInfoSync().platform || '';
+      return platform === 'windows' || platform === 'mac';
+    } catch (e) {}
+    return false;
+  },
+
+  // 选择视频：PC 端微信对 chooseMedia 支持不完善，改用 chooseMessageFile 降级
+  pickVideoFile(callback) {
+    const handleFile = (file) => {
+      const path = file.tempFilePath || file.path || '';
+      const ext = (file.name || path).split('.').pop().toLowerCase();
+      if (ext !== 'mp4') {
+        return wx.showToast({ title: '仅支持 MP4 格式', icon: 'none' });
+      }
+      callback({
+        path,
+        size: file.size || 0,
+        name: `video_${Date.now()}.mp4`
+      });
+    };
+
+    if (this.isPC()) {
+      wx.chooseMessageFile({
+        count: 1,
+        type: 'video',
+        success: (res) => {
+          const file = res.tempFiles && res.tempFiles[0];
+          if (!file) return;
+          handleFile(file);
+        },
+        fail: (err) => console.error('[pickVideo PC 降级失败]', err)
+      });
+    } else {
+      wx.chooseMedia({
+        count: 1,
+        mediaType: ['video'],
+        sourceType: ['album', 'camera'],
+        maxDuration: 600,
+        success: (res) => {
+          const file = res.tempFiles && res.tempFiles[0];
+          if (!file) return;
+          handleFile(file);
+        },
+        fail: (err) => console.error('[pickVideo 失败]', err)
+      });
+    }
   },
 
   uploadFiles(stepIdx, groupIdx, files, type) {
@@ -452,7 +494,8 @@ Page({
         });
         if (files.length === 0) return;
         this.uploadPreparationFiles(files, 'document');
-      }
+      },
+      fail: (err) => console.error('[pickPreparationDocuments 失败]', err)
     });
   },
 
@@ -478,30 +521,14 @@ Page({
           name: (f.path || f.tempFilePath || '').split('/').pop() || `image_${Date.now()}.jpg`
         }));
         this.uploadPreparationFiles(items, 'image');
-      }
+      },
+      fail: (err) => console.error('[pickPreparationImages 失败]', err)
     });
   },
 
   pickPreparationVideos() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['video'],
-      sourceType: ['album', 'camera'],
-      maxDuration: 600,
-      success: (res) => {
-        const file = res.tempFiles[0];
-        if (!file) return;
-        const path = file.tempFilePath || '';
-        const ext = path.split('.').pop().toLowerCase();
-        if (ext !== 'mp4') {
-          return wx.showToast({ title: '仅支持 MP4 格式', icon: 'none' });
-        }
-        this.uploadPreparationFiles([{
-          path,
-          size: file.size || 0,
-          name: `video_${Date.now()}.mp4`
-        }], 'video');
-      }
+    this.pickVideoFile((file) => {
+      this.uploadPreparationFiles([file], 'video');
     });
   },
 
