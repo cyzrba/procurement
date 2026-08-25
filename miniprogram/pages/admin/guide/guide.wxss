@@ -242,9 +242,8 @@
   font-size: 24rpx;
   color: #2d2a24;
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  word-break: break-all;
 }
 
 .media-size {
