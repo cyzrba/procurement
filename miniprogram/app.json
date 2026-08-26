@@ -1,6 +1,8 @@
 {
   "pages": [
     "pages/login/login",
+    "pages/agreement/agreement",
+    "pages/privacy/privacy",
     "pages/home/home",
     "pages/comments/comments",
     "pages/price-range-select/price-range-select",

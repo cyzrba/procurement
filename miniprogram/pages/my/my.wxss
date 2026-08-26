@@ -91,6 +91,9 @@
   color: #c0b8ae;
   font-weight: 300;
 }
+.menu-card-gap {
+  margin-top: 16rpx;
+}
 
 /* 退出登录 */
 .logout-section {

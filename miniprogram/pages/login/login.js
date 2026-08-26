@@ -11,6 +11,7 @@ Page({
     phone: '',
     username: '',
     password: '',
+    agreed: false,
     loading: false,
     checkingAuth: true
   },
@@ -41,6 +42,13 @@ Page({
 
   // 用户登录
   handleUserLogin() {
+    if (!this.data.agreed) {
+      return wx.showToast({
+        title: '请先阅读并同意《用户服务协议》和《隐私政策》',
+        icon: 'none',
+        duration: 2500
+      });
+    }
     const { name, phone } = this.data;
     if (!name.trim()) return wx.showToast({ title: '请输入姓名', icon: 'none' });
     if (!/^1\d{10}$/.test(phone)) return wx.showToast({ title: '请输入正确手机号', icon: 'none' });
@@ -77,5 +85,19 @@ Page({
 
   switchToUser() {
     this.setData({ loginMode: 'user' });
+  },
+
+  // 同意协议勾选
+  toggleAgreed() {
+    this.setData({ agreed: !this.data.agreed });
+  },
+
+  // 打开协议 / 隐私政策
+  openAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' });
+  },
+
+  openPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
   }
 });

@@ -34,6 +34,15 @@
     <view class="form-group">
       <input class="form-input" placeholder="请输入手机号" type="number" maxlength="11" model:value="{{phone}}" />
     </view>
+    <view class="agreement-row" bindtap="toggleAgreed">
+      <view class="checkbox {{agreed ? 'checked' : ''}}">
+        <text wx:if="{{agreed}}" class="checkbox-mark">✓</text>
+      </view>
+      <text class="agreement-text">我已阅读并同意</text>
+      <text class="agreement-link" catchtap="openAgreement">《用户服务协议》</text>
+      <text class="agreement-text">和</text>
+      <text class="agreement-link" catchtap="openPrivacy">《隐私政策》</text>
+    </view>
     <button class="btn-primary" bindtap="handleUserLogin" loading="{{loading}}">登 录</button>
     <view class="form-footer">
       <text class="link" bindtap="switchToAdmin">管理员登录 →</text>

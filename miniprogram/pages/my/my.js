@@ -44,6 +44,15 @@ Page({
     wx.navigateTo({ url: '/pages/favorites/favorites' });
   },
 
+  // 打开协议 / 隐私政策
+  goToAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' });
+  },
+
+  goToPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
   // 微信通知开关切换
   handleSubscribeSwitch(e) {
     const isOn = e.detail.value;

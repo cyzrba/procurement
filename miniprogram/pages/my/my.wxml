@@ -32,6 +32,24 @@
     </view>
   </view>
 
+  <!-- 协议与政策 -->
+  <view class="section">
+    <view class="menu-card" bindtap="goToAgreement">
+      <view class="menu-left">
+        <text class="menu-icon">📄</text>
+        <text class="menu-text">用户服务协议</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-card menu-card-gap" bindtap="goToPrivacy">
+      <view class="menu-left">
+        <text class="menu-icon">🛡️</text>
+        <text class="menu-text">隐私政策</text>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
   <!-- 微信通知设置 -->
   <view class="section">
     <view class="section-header">
