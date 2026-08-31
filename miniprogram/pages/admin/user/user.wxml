@@ -44,7 +44,7 @@
   </view>
 
   <view class="data-list">
-    <view class="data-item" wx:for="{{list}}" wx:key="_id">
+    <view class="data-item" wx:for="{{pageList}}" wx:key="_id">
       <view class="data-main">
         <view class="data-name-row">
           <text class="data-name">{{item.name}}</text>
@@ -63,6 +63,13 @@
         </view>
       </view>
     </view>
+  </view>
+
+  <!-- 分页 -->
+  <view class="pagination" wx:if="{{totalPages > 1}}">
+    <view class="page-btn {{currentPage <= 1 ? 'page-btn-disabled' : ''}}" bindtap="onPrevPage">上一页</view>
+    <text class="page-info">第 {{currentPage}} / {{totalPages}} 页</text>
+    <view class="page-btn {{currentPage >= totalPages ? 'page-btn-disabled' : ''}}" bindtap="onNextPage">下一页</view>
   </view>
 
   <!-- 编辑弹窗 -->

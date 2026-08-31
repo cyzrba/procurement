@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
+const _ = db.command;
 
 exports.main = async (event, context) => {
   const { action, data } = event;
@@ -17,6 +18,22 @@ exports.main = async (event, context) => {
     return { code: 500, message: '服务器内部错误' };
   }
 };
+
+// 一次性查重：分批查询已存在的手机号，避免 in 条件过大
+async function findExistingPhones(phones) {
+  const existing = new Set();
+  const CHUNK_SIZE = 500;
+  for (let i = 0; i < phones.length; i += CHUNK_SIZE) {
+    const chunk = phones.slice(i, i + CHUNK_SIZE);
+    const res = await db.collection('users')
+      .where({ phone: _.in(chunk) })
+      .field({ phone: true })
+      .limit(1000)
+      .get();
+    res.data.forEach(d => existing.add(d.phone));
+  }
+  return existing;
+}
 
 async function importUsers(data) {
   const fileId = data && data.fileId;
@@ -37,16 +54,16 @@ async function importUsers(data) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-    // raw: false → 优先读取字符串值，但手机号仍可能以 number 类型返回
-    // 因此后续用 String() 做二次保障
-    // defval: '' → 空单元格返回空字符串
+    // raw: false -> 优先读取字符串值，但手机号仍可能以 number 类型返回
+    // 因此后续用 String() 做二次保险
+    // defval: '' -> 空单元格返回空字符串
     const rows = XLSX.utils.sheet_to_json(sheet, {
       header: ['name', 'phone'],
       raw: false,
       defval: ''
     });
 
-    // 跳过表头行（第1行），过滤掉姓名或手机号为空的无效行
+    // 跳过表头行（第 1 行），过滤掉姓名或手机号为空的无效行
     const dataRows = rows.slice(1).filter(r => {
       const name = r.name ? String(r.name).trim() : '';
       const phone = r.phone !== undefined && r.phone !== null ? String(r.phone).trim() : '';
@@ -54,35 +71,52 @@ async function importUsers(data) {
     });
     const result = { total: dataRows.length, success: 0, failed: 0, errors: [] };
 
-    for (let i = 0; i < dataRows.length; i++) {
-      const name = String(dataRows[i].name).trim();
-      const phone = String(dataRows[i].phone).trim();
+    // 1) 逐行基础校验 + 文件内手机号去重
+    const pending = [];
+    const seenPhones = new Set();
+    dataRows.forEach((r, i) => {
+      const name = String(r.name).trim();
+      const phone = String(r.phone).trim();
       const rowNum = i + 2; // Excel 行号（含表头）
 
-      if (!name) {
-        result.failed++;
-        result.errors.push({ row: rowNum, reason: '姓名为空' });
-        continue;
-      }
       if (!/^1\d{10}$/.test(phone)) {
         result.failed++;
         result.errors.push({ row: rowNum, reason: `手机号格式错误（"${phone}" 不是有效的11位手机号）` });
-        continue;
+        return;
       }
+      if (seenPhones.has(phone)) {
+        result.failed++;
+        result.errors.push({ row: rowNum, reason: `手机号 ${phone} 在文件中重复` });
+        return;
+      }
+      seenPhones.add(phone);
+      pending.push({ name, phone, row: rowNum });
+    });
 
+    // 2) 一次性查重：把待导入手机号一次性查出来，已存在的直接标记失败
+    const existingPhones = pending.length
+      ? await findExistingPhones(pending.map(p => p.phone))
+      : new Set();
+
+    const toInsert = [];
+    for (const p of pending) {
+      if (existingPhones.has(p.phone)) {
+        result.failed++;
+        result.errors.push({ row: p.row, reason: `手机号 ${p.phone} 已存在` });
+      } else {
+        toInsert.push(p);
+      }
+    }
+
+    // 3) 批量写入（分批 add，单批 500 条）
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const batch = toInsert.slice(i, i + BATCH_SIZE);
       try {
-        // 检查是否已存在
-        const exist = await db.collection('users').where({ phone }).get();
-        if (exist.data.length > 0) {
-          result.failed++;
-          result.errors.push({ row: rowNum, reason: `手机号 ${phone} 已存在` });
-          continue;
-        }
-
         await db.collection('users').add({
-          data: {
-            name,
-            phone,
+          data: batch.map(p => ({
+            name: p.name,
+            phone: p.phone,
             password: '', // 普通用户默认空密码
             role: 'user',
             openId: '',
@@ -90,19 +124,39 @@ async function importUsers(data) {
             lastLoginAt: null,
             createdAt: db.serverDate(),
             updatedAt: db.serverDate()
-          }
+          }))
         });
-        result.success++;
+        result.success += batch.length;
       } catch (e) {
-        result.failed++;
-        result.errors.push({ row: rowNum, reason: '导入失败: ' + e.message });
+        // 整批失败时逐条回退，尽量保住其他记录并给出具体失败原因
+        for (const p of batch) {
+          try {
+            await db.collection('users').add({
+              data: {
+                name: p.name,
+                phone: p.phone,
+                password: '',
+                role: 'user',
+                openId: '',
+                status: 'active',
+                lastLoginAt: null,
+                createdAt: db.serverDate(),
+                updatedAt: db.serverDate()
+              }
+            });
+            result.success++;
+          } catch (e2) {
+            result.failed++;
+            result.errors.push({ row: p.row, reason: '导入失败: ' + e2.message });
+          }
+        }
       }
     }
 
     await writeLog({
       module: 'user',
       action: 'import',
-      targetName: `批量导入`,
+      targetName: '批量导入',
       detail: `批量导入用户 (成功 ${result.success} 人，失败 ${result.failed} 人)`,
       operatorId,
       operatorName

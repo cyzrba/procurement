@@ -5,6 +5,10 @@ Page({
   data: {
     list: [],
     total: 0,
+    pageSize: 7,
+    currentPage: 1,
+    totalPages: 0,
+    pageList: [],
     importResult: null,
     importErrors: [],
     // 编辑弹窗
@@ -31,13 +35,9 @@ Page({
   onShow() { this.loadUsers(); },
 
   loadUsers() {
-    const db = wx.cloud.database();
-    const _ = db.command;
     const currentUser = auth.getUser();
-    db.collection('users').where({
-      role: _.in(['user', 'admin'])
-    }).get().then(res => {
-      const list = res.data;
+    cloud.getUserList().then(res => {
+      const list = res.list || [];
       // 排序：当前管理员优先 -> 其他管理员 -> 普通用户
       list.sort((a, b) => {
         if (a._id === (currentUser && currentUser.userId)) return -1;
@@ -47,7 +47,28 @@ Page({
         return 0;
       });
       this.setData({ list, total: list.length });
+      this.applyPagination(1);
     });
+  },
+
+  applyPagination(targetPage) {
+    const { list, pageSize } = this.data;
+    const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+    let page = targetPage || 1;
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    const pageList = list.slice((page - 1) * pageSize, page * pageSize);
+    this.setData({ currentPage: page, totalPages, pageList });
+  },
+
+  onPrevPage() {
+    if (this.data.currentPage <= 1) return;
+    this.applyPagination(this.data.currentPage - 1);
+  },
+
+  onNextPage() {
+    if (this.data.currentPage >= this.data.totalPages) return;
+    this.applyPagination(this.data.currentPage + 1);
   },
 
   // ===== 批量导入 =====
@@ -104,6 +125,12 @@ Page({
             }).catch((err) => {
               wx.hideLoading();
               console.error('[import error]', err);
+              const msg = (err && (err.message || err.errMsg)) || '导入失败，请稍后重试';
+              wx.showModal({
+                title: '导入失败',
+                content: msg,
+                showCancel: false
+              });
             });
           },
           fail: (err) => {

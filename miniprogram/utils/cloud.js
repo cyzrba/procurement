@@ -47,6 +47,7 @@ module.exports = {
   deleteUser: (_id) => call('user', 'deleteUser', withAdminCtx({ _id })),
   createUser: (name, phone, status) => call('user', 'createUser', withAdminCtx({ name, phone, status })),
   changePassword: (newPassword) => call('user', 'changePassword', withAdminCtx({ newPassword })),
+  getUserList: () => call('user', 'list', withAdminCtx({})),
 
   // 类目
   getCategories: (status) => call('category', 'list', { status }),

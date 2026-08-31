@@ -31,6 +31,8 @@ exports.main = async (event, context) => {
         return await createUser(data);
       case 'changePassword':
         return await changePassword(data);
+      case 'list':
+        return await listUsers(data);
       default:
         return { code: -1, message: '未知操作' };
     }
@@ -368,6 +370,35 @@ async function changePassword(data) {
   });
 
   return { code: 0, data: { message: '密码修改成功' } };
+}
+
+// 管理员获取用户列表（服务端查询，单次最多 1000 条，超出自动分批取完）
+async function listUsers(data) {
+  const { operatorId } = data || {};
+  if (!operatorId) {
+    return { code: 1001, message: '参数缺失（operatorId）' };
+  }
+
+  // 校验管理员身份
+  const adminRes = await db.collection('users').doc(operatorId).get();
+  if (!adminRes.data || adminRes.data.role !== 'admin') {
+    return { code: 1005, message: '仅管理员可查看用户列表' };
+  }
+
+  const _ = db.command;
+  const LIMIT = 1000;
+  const list = [];
+  for (let skip = 0; ; skip += LIMIT) {
+    const res = await db.collection('users')
+      .where({ role: _.in(['user', 'admin']) })
+      .skip(skip)
+      .limit(LIMIT)
+      .get();
+    list.push(...res.data);
+    if (res.data.length < LIMIT) break;
+  }
+
+  return { code: 0, data: { list, total: list.length } };
 }
 
 async function writeLog(logData) {
